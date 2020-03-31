@@ -1,0 +1,12 @@
+*.obj
+.*.sw?
+*.pdb
+*.tlb
+*.res
+*.exe
+*.manifest
+*.exp
+*.ilk
+*.lib
+NEWS_i.c
+NEWS_i.h

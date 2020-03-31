@@ -89,7 +89,7 @@ protected:
    TBase822HeaderInner (const TBase822HeaderInner & src);
 
 public:
-typedef enum {kAverageHeaderSize = 150};
+   enum {kAverageHeaderSize = 150};
 
 #if defined(_DEBUG)
    virtual void Dump(CDumpContext& dc) const;

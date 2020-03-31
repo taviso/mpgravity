@@ -66,6 +66,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 **********************************************************************************/
 
+#include <functional>
 #include "stdafx.h"
 
 // Latest Profiling + Tuning changes
@@ -276,7 +277,7 @@ BOOL TThreadList::CatchUpArticles(TNewsGroup* pNG, KThreadList::EXPost eXPost)
 
 		while (it != itEnd)
 		{
-			pArtNode = *it++;
+			pArtNode = (*it++).pNode;
 
 			if (sFilter.FilterMatch (pArtNode->GetpRandomHeader(), pNG, &rTags ))
 			{

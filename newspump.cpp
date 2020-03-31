@@ -4512,7 +4512,7 @@ int TPump::CryptoLogin (void * pVoidSPA)
 	strStatusLine.LoadString (IDS_SPA_STATUS);
 
 	// clear status line when done
-	TUserDisplay_Auto auto(TUserDisplay_Auto::kClearDisplay,
+	TUserDisplay_Auto dauto(TUserDisplay_Auto::kClearDisplay,
 		m_fEmergencyPump ?
 		TUserDisplay_Auto::kPriority :
 	TUserDisplay_Auto::kNormal);

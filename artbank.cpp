@@ -876,7 +876,7 @@ int TArticleBank::CreateArticleIndex (TArticleIndexList * pIndexLst)
 
 	while (it != m_setNodes.end() )
 	{
-		TArtNode * pNode = *it++;
+		TArtNode * pNode = (*it++).pNode;
 
 		ASSERT(pNode);
 
@@ -898,7 +898,7 @@ int TArticleBank::Empty ()
 
 	while (it != m_setNodes.end())
 	{
-		TArtNode * pNode = *it;
+		TArtNode * pNode = (*it).pNode;
 
 		// delete call  (1/3)
 		delete pNode;
@@ -1019,7 +1019,7 @@ void TArticleBank::isolate_all_nodes(void)
 
 	while (it != m_setNodes.end())
 	{
-		TArtNode * pNode = *it++;
+		TArtNode * pNode = (*it++).pNode;
 
 		pNode->Isolate ();
 	}

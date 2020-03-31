@@ -4,6 +4,8 @@ This is just an import of MicroPlanet Gravity 3.0.4, updated to compile with
 Visual Studio 2019. I also modified it to build with GNU make, my preferred
 build system.
 
+https://sourceforge.net/projects/mpgravity/
+
 I use an NNTP reader to read mailing lists on [gmane](http://gmane.io/), but
 don't have a good one for when I'm on Windows. There are a few popular ones,
 but this one is opensource and relatively full featured (but somewhat dated).

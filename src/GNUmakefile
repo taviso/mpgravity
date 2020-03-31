@@ -160,6 +160,8 @@ mpgravity.exe: $(Sources:.cpp=.obj) $(HelperClasses:.cpp=.obj)                 \
 
 clean:
 	-cmd.exe /c del /q /f *.exp *.exe *.obj *.pdb *.ilk *.xml *.res *.ipdb *.iobj *.dll *.tmp
+	-cmd.exe /c del /q /f *.manifest *.lib *.tlb
+	-cmd.exe /c del /q /f NEWS_i.h NEWS_i.c
 	-cmd.exe /c del /q /f zlib\\code\\*.obj
 	-cmd.exe /c del /q /f png\\code\\*.obj
 	-cmd.exe /c del /q /f pcre\\*.obj

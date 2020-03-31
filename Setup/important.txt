@@ -1,0 +1,76 @@
+
+    * * * * * Important Information for Gravity Users * * * * *
+
+                 Gravity 3.0 (open source versions)
+
+      Main Gravity Website : http://mpgravity.sourceforge.net/
+  User Support Forums : http://apps.sourceforge.net/phpbb/mpgravity/
+(note that anonymous posting IS allowed, we won't force you to register)
+
+
+
+If you use the open source version you should understand the following
+
+- Installation : Gravity uses a single, packaged installer. the installer
+  *may* need to download the latest version of Microsoft Installer if it
+  is not present on your system, but it will only need to do this if you
+  have not installed anything or used Windows Update in the past year or
+  so.
+
+- To uninstall or repair Gravity please use Windows "Add/Remove Programs"
+  in Control Panel.
+
+
+KNOWN INSTALLATION PROBLEMS
+---------------------------
+None at this time.
+
+
+OTHER NOTES
+-----------
+
+- Versions 2.9 and later will not modify an installation of an earlier
+  version (2.7 or 2.8). They detect this installation when first started
+  and the user has the option of importing the database and settings of
+  this earlier version.
+  (PLEASE NOTE IF YOU INSTALL v2.9 TO THE SAME LOCATION AS AN EARLIER
+  VERSION IT WILL OVERWRITE THE PROGRAM FILES, it will still give you
+  the opportunity to import the database and settings and will not touch
+  these in the old installtion)
+
+- Versions 2.9 and later have a much improved spell checker. Highlighting
+  of the mis-spelled word, user entry of corrected words and other
+  improvements.
+
+- If you have a copy of Gallery it should work, but Gallery is no longer
+  distibuted with the open-source distributions
+
+- Gravity now has incorporated database Import/Export functionality.
+  DO NOT USE GravityBackup, it is incompatible with Gravity versions
+  2.9 onwards.
+
+- New help files (that are compatible with Windows Vista and windows 7)
+  have been finished are now included.
+
+- Gravity (2.9 onwards) is fully compatible with Vista and Windows 7,
+  32 and 64 bit. Please note that Gravity now creates individual data
+  files for each user so every user can have their own settings and
+  subscribed newsgroups.
+
+- Gravity is constantly being developed, new features added, bugs fixed.
+  In the download area of Gravitys SourceForge website you will notice
+  there are multiple versions of Gravity available. All you need to know
+  is we recommend you download the latest STABLE version.
+  
+  STABLE versions can be recognised by checking out the second number in
+  the version number. i.e. 3.0 is a stable version (the number '0' is
+  even), 3.1 is a development build, 3.2 will be the next stable build.
+
+  (Development builds are for developers and other people who don't mind
+  the occasional crash and are happy to test out new features for us)
+
+
+===================================================================
+
+           Tom B.        nfn03862@naples.net
+           Richard W.    gravity@ukrm.co.uk

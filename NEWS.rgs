@@ -1,0 +1,11 @@
+HKCR
+{
+	NoRemove AppID
+	{
+		{CDBF02E3-79CD-4A33-8FEA-D8F172FE5AA3} = s 'NEWS'
+		'NEWS.EXE'
+		{
+			val AppID = s {CDBF02E3-79CD-4A33-8FEA-D8F172FE5AA3}
+		}
+	}
+}

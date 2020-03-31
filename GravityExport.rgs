@@ -1,0 +1,24 @@
+HKCR
+{
+	MicroPlanet.GravityExport.1 = s 'GravityExport Class'
+	{
+		CLSID = s '{45DE78E1-0692-4C9C-ADC8-E152118E5BDC}'
+	}
+	MicroPlanet.GravityExport = s 'GravityExport Class'
+	{
+		CLSID = s '{45DE78E1-0692-4C9C-ADC8-E152118E5BDC}'
+		CurVer = s 'MicroPlanet.GravityExport.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {45DE78E1-0692-4C9C-ADC8-E152118E5BDC} = s 'GravityExport Class'
+		{
+			ProgID = s 'MicroPlanet.GravityExport.1'
+			VersionIndependentProgID = s 'MicroPlanet.GravityExport'
+			ForceRemove 'Programmable'
+			LocalServer32 = s '%MODULE%'
+			val AppID = s '{CDBF02E3-79CD-4A33-8FEA-D8F172FE5AA3}'
+			'TypeLib' = s '{ABF68601-5A1B-11CE-A7E5-444553540000}'
+		}
+	}
+}

@@ -1,0 +1,102 @@
+Gravity Version 3.0 Stable Open Source Change Log
+=========================================================================
+
+3.0.4 STABLE Built + Released 12/9/2010
+  [-] Fixed : Fixed error in 3.0.3 installer which made it impossible to
+      upgrade from 3.0.2.
+
+3.0.3 STABLE Built + Released 11/9/2010
+  [-] Fixed : If an XFace header line was split over more than 1 line
+      it was not decoded properly.
+
+3.0.2 RC3
+  [-] Fixed : Global Options, Server and Newsgroup properties help
+      buttons now open help file correctly (mostly to the right page)
+
+3.0.1 RC2
+  [-] Fixed : Bugs in Import / Export running on Win 7 64 bit.
+
+3.0.0 RC1 Built + Released 18/07/2010
+NOTE : This is a comprehensive list of items added / upgraded / fixed
+since the last stable version (2.8.1).
+  [+] Added : Brand new (Vista/Windows 7 compatible) help file.
+  [+] Added : Changed Server Setup dialog into a wizard with improved UI.
+  [+] Added : Add ability to customise signature font size + colour.
+  [+] Upgraded : Spell Checked upgraded to Hunspell.
+  [+] Enhanced spell checker, added edit box to enter your own words.
+  [+] Added : English, GB spell checker dictionaries.
+  [+] Ugraded : English, US dictionaries upgraded.
+  [+] Added : Search dialog now has a "Search Headers" option which
+      allows searching in the FULL raw header text, using plain text
+      or regular expressions. Note the article has to be local or it
+      will be downloaded, just like searching in the body.
+  [+] Added : Rule and Filter BODY checking now also checks the HEADER
+      text so you can use reg exprs to check any header fields you want.
+  [+] Enhanced : Score and Lines columns have extra space added to RHS
+      to improve visual appearance.
+  [+] Enhanced : Thread pane header control columns : All titles are now
+      centre aligned and the incorrect "space" on the LHS has gone.
+  [+] Added : Export and Import of News Server
+  [+] Added : Command line Import of News Server for ISP use.
+  [+] Added import button on first startup screen.
+  [+] Upgraded Gravity and installer. Gravity is now compatible with Vista
+      and Windows 7, following Microsoft conventions for user data storage.
+      In English this means that you can have multiple users on one PC and
+      they can each have their own set of settings and newsgroups. What
+      one user does does not affect any other user.
+      Old settings and newsgroup files, provided they haven't been moved,
+      are detected and imported.
+      Please note that if Gravity is to be used by more than one person
+      on the PC it must be installed by an administrator into the
+      recommended location. Once installed both administrator and standard
+      users can use Gravity.
+  [+] Upgraded to allow multiple versions of Gravity to co-exist.
+      Each different version of Gravity from 2.9 onwards has its own
+      database folder and its own registry settings.
+  [+] Added database and settings export and import. The archive file
+      format is Microsoft CAB(inet) compressed format and the files within
+      can be viewed and extracted with Microsoft Explorer.
+  [+] Changed the installer so it includes the required Microsoft libraries
+      as opposed to downloading them.
+  [-] Due to the above, the Online and Offline installers were approximately
+      the same size so the Offline Installer has been dropped.
+
+  [-] Fixed : Foreign month names caused crash.
+  [-] Fixed : Save article (append to existing file) missing delimiters
+              between existing text in file and new article.
+  [-] Fixed : Bug fix to stop update checker triggering every 5 seconds.
+  [-] Fixed : Custom headers can now be upto 998 bytes long.
+  [-] Fixed : Software update auto-checker now starts after main screen
+      has appeared, plus timeout is set to 5 seconds.
+  [-] Fixed : Crash when shutting down current Gravity after new version
+      has been detected and user selects to goto web site and download it.
+  [-] Fixed : Bug where if there was just one new post for a group it was
+      not downloaded and was lost.
+  [-] Critical Bug Fix : Intermittent lockup when reading articles.
+  [-] Fixed : Occasional crash in Search window.
+  [-] Fixed : From header creation did not quote forbidden chars
+      according to RFC822
+  [-] Fixed : Initial server setup : pre filled fields no longer
+      use "Microsoft" if no user name or organisation can be found.
+  [-] Fixed : charset detection bug for MS Live Mail posts.
+  [-] Fixed : Trace file could not be created bug.
+  [-] Fixed : Visual C++ Redist install bug.
+  [-] Fixed : Bug when importing over a multiple NNTP server setup.
+  [-] Fixed : Reg and mywords.lst files left in imported news dir.
+  [-] Online installer download location moved into SF file space.
+  [-] Fixed : Initial DB import from users VirtualStore.
+  [-] Fixed : SpellChecker - Correct button not enabling correctly.
+  [-] Fixed : Toolbars not remembering previous positions correctly.
+  [-] Fixed error in Initial Setup dialog where the user could not quit.
+  [-] Fixed : FollowUp window got hidden when user used context menu Reply
+      option from Thread pane.
+
+
+
+
+HISTORICAL CHANGE LOG
+=====================
+
+Please see '2.9 changes.txt' for the historical change log for V2.9.x
+
+Please see '2.8 changes.txt' for the historical change log for V2.8.x

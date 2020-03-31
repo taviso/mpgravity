@@ -1,0 +1,86 @@
+A brief history of Microplanet gravity
+======================================
+
+Gravity has been a popular Usenet client since 1996.
+Originally, Gravity was shareware, written and developed
+by MicroPlanet Inc.(Version 1.0). Gravity was selected
+as PC Magazine's Editor's Choice in October 1996.
+
+Gravity was acquired by Anawave briefly (Version 2.0),
+then re-acquired by MicroPlanet. Numerous features were
+added over these years, including multiple server support
+and scoring. The last shareware version was 2.3. In
+November 2000 MicroPlanet gave away Gravity as freeware
+(Version 2.5).
+
+After this period, Al Choy, co-founder of MicroPlanet,
+continued improvements and unofficial releases known
+as "Super Gravity" (Versions 2.6). These unoffical versions
+were available from 2001 through 2004. Al continued to
+add features including preliminary MIME support and
+8-bit character support.
+
+Al later stripped out licensed proprietary code, set up the
+SourceForge project and made the source code available under
+the BSD License. Regular expressions were replaced with
+PCREs. These Builds were numbered 2.7 (2.7.0) with the
+last version 2.7.0 Build 2067, dated August 1, 2004.
+
+In August 2008 Richard Wood began compiling Gravity on newer
+development platforms optimized for Windows XP, restoring
+some lost functionality, improving performance, as well as
+adding numerous tweaks and new features. These builds begin
+with Version 2.7.1, Build 1. With Version 2.8.2, a newer
+development environment provides better support for Windows
+Vista and Windows 7, as well as multi user installation options.
+
+
+
+The current stable version of Gravity is 2.8 Build 2 (2.8.2)
+
+
+All information in this file ONLY applies to older versions of Gravity.
+It is supplied purely for historical interest and reference only.
+
+I repeat, NONE of the bugs, registry tweaks or anything else detailed
+in this file need to be done for Gravity 2.8 or later.
+
+
+RichardW & TomB
+
+
+------------------------      Gravity       -------------------------
+
+
+If you use the open source version you should understand the following
+
+
+- Version 2.7.1b and later have a minimal spell checker.
+
+- If you are upgrading from a version older than 2.6 Build 2057 :-
+  + PCREs. Gravity now uses Perl Compatible Regular Expressions.
+    Please read the following issues regarding REs.
+
+  * If Gravity is already installed the following registry change
+    MUST be made to recognize binary parts (and for the
+    "Complete_Binaries" Filter to work)
+
+	HKEY_CURRENT_USER\Software\MicroPlanet\Gravity\System
+        Change DecodeRE-Parts to  ([0-9]+)/([0-9]+)
+
+        For reference, the previous default is: [0-9]+$b/[0-9]+$c
+
+  *  Rules/filters/scoring that use REs must be changed (if necessary)
+
+- If you have copies of Gallery and Backup they should work, but they
+  are not distibuted with open-source distributions
+
+
+      Main Gravity Website : http://mpgravity.sourceforge.net/
+  User Support Forums : http://apps.sourceforge.net/phpbb/mpgravity/
+(note that anonymous posting IS allowed, we won't force you to register)
+
+===================================================================
+
+           Tom B.        nfn03862@naples.net
+           Richard W.    gravity@ukrm.co.uk

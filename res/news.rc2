@@ -1,0 +1,52 @@
+//
+// NEWS.RC2 - resources Microsoft Visual C++ does not edit directly
+//
+
+#ifdef APSTUDIO_INVOKED
+        #error this file is not editable by Microsoft Visual C++
+#endif //APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+// Add manually edited resources here...
+//
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// IMAGE
+//
+
+IDC_IMAGE_AMCABOUT      IMAGE                   "res\\faded.jpg"
+IDB_ABOUT_STR           BITMAP DISCARDABLE      "res\\ja2.bmp"
+
+IDR_SPLASH_SMALL		BINARY					"res\\Splash Small.png"
+IDR_SPLASH_LARGE		BINARY					"res\\Splash Large.png"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// iso-8859 charsets  1-10, + 15
+//
+
+1                      ISOMAP                   "res\\8859-1.bin"
+2                      ISOMAP                   "res\\8859-2.bin"
+3                      ISOMAP                   "res\\8859-3.bin"
+4                      ISOMAP                   "res\\8859-4.bin"
+5                      ISOMAP                   "res\\8859-5.bin"
+6                      ISOMAP                   "res\\8859-6.bin"
+7                      ISOMAP                   "res\\8859-7.bin"
+8                      ISOMAP                   "res\\8859-8.bin"
+9                      ISOMAP                   "res\\8859-9.bin"
+10                     ISOMAP                   "res\\8859-10.bin"
+11                     ISOMAP                   "res\\8859-11.bin"
+13                     ISOMAP                   "res\\8859-13.bin"
+14                     ISOMAP                   "res\\8859-14.bin"
+15                     ISOMAP                   "res\\8859-15.bin"
+16                     ISOMAP                   "res\\8859-16.bin"
+1250                   ISOMAP                   "res\\cp1250.bin"
+1251                   ISOMAP                   "res\\cp1251.bin"
+1252                   ISOMAP                   "res\\cp1252.bin"
+1253                   ISOMAP                   "res\\cp1253.bin"
+1254                   ISOMAP                   "res\\cp1254.bin"
+1255                   ISOMAP                   "res\\cp1255.bin"
+1256                   ISOMAP                   "res\\cp1256.bin"
+1257                   ISOMAP                   "res\\cp1257.bin"
+1258                   ISOMAP                   "res\\cp1258.bin"

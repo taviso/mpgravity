@@ -1,0 +1,21 @@
+Gravity Version 3.1 BETA Open Source Change Log
+=========================================================================
+
+3.1.0 Built + Released ??/??/2010
+
+
+Please note that this is a BETA version. This is where new/modified
+features appear. Beta versions also act as a test platform for the next
+Stable version when quite a lot of things have been changed and the
+software needs a more thorough test by fellow beta testers.
+
+
+
+HISTORICAL CHANGE LOGS
+======================
+
+Please see '3.0 changes.txt' for the historical change log for V3.0.x
+
+Please see '2.9 changes.txt' for the historical change log for V2.9.x
+
+Please see '2.8 changes.txt' for the historical change log for V2.8.x

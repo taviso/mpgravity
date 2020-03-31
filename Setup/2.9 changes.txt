@@ -1,0 +1,130 @@
+Gravity Version 2.9 BETA Open Source Change Log
+=========================================================================
+
+2.9.15 Built + Released 11/04/2010
+  [+] Added : Brand new (Vista/Windows 7 compatible) help file.
+  [+] Added : Changed Server Setup dialog into a wizard with improved UI.
+  [+] Added : Add ability to customise signature font size + colour.
+  [-] Fixed : Custom headers were lost during export / import.
+  [-] Fixed : Foreign month names caused crash.
+  [-] Fixed : Any changes to Bozo Bin were not saved before exporting DB.
+  [-] Fixed : Any changes to Watch & ignore threads were not saved before
+              exporting DB.
+  [-] Fixed : Save article (append to existing file) missing delimiters
+              between existing text in file and new article.
+
+2.9.14 Built + Released 24/11/2009
+  [-] Fixed : Bug fix to stop update checker triggering every 5 seconds.
+  [-] Fixed : Offline installer for V2.9.13 was corrupted.
+
+2.9.13 Built + Released 04/10/2009
+  [+] Upgraded : Spell Checked upgraded to Hunspell.
+  [+] Added : English, GB spell checker dictionaries.
+  [+] Ugraded : English, US dictionaries upgraded.
+  [-] Fixed : Custom headers can now be upto 998 bytes long.
+  [-] Fixed : Software update auto-checker now starts after main screen
+      has appeared, plus timeout is set to 5 seconds (from the default
+      of 30 or 60 secs)
+
+2.9.11 Built + Released 29/08/2009
+  [-] Fixed : Bug in import from old version.
+  [-] Fixed : Installer failed trying to install "vcredist_x86"
+      prerequisite due to it being updated by Microsoft - updated to
+      current version.
+
+2.9.10 Built + released 27/08/2009
+  [-] Fixed : Crash when shutting down current Gravity after new version
+      has been detected and user selects to goto web site and download it.
+  [-] Fixed : Bug where if there was just one new post for a group it was
+      not downloaded and was lost.
+
+2.9.9 Built + released 25/08/2009
+  [-] Fixed : New installation should not set toolbars back to default.
+  [-] Critical Bug Fix : Intermittent lockup when reading articles.
+
+2.9.8 Built + released 23/08/2009
+  [+] Added : Search dialog now has a "Search Headers" option which
+      allows searching in the FULL raw header text, using plain text
+      or regular expressions. Note the article has to be local or it
+      will be downloaded, just like searching in the body.
+  [-] Fixed : Occasional crash in Search window.
+
+2.9.7 Built 16/08/2009
+  [-] Fixed : From header creation did not quote forbidden chars
+      according to RFC822
+  [-] Fixed : Initial server setup : pre filled fields no longer
+      use "Microsoft" if no user name or organisation can be found.
+  [+] Added : Rule and Filter BODY checking now also checks the HEADER
+      text so you can use reg exprs to check any header fields you want.
+  [+] Enhanced : Score and Lines columns have extra space added to RHS
+      to improve visual appearance.
+  [+] Enhanced : Thread pane header control columns : All titles are now
+      centre aligned and the incorrect "space" on the LHS has gone.
+
+2.9.6 Built 23/07/2009
+  [-] Improved : Import + Export, removed "popup" windows and dependancy
+      on regedit and xcopy.
+
+2.9.5 Built 23/07/2009
+  [+] Added : Export and Import of News Server
+  [+] Added : Command line Import of News Server for ISP use.
+  [-] Fixed : charset detection bug for MS Live Mail posts.
+  [-] Fixed : Trace file could not be created bug.
+  [-] Fixed : Visual C++ Redist install bug.
+  [-] Fixed : Bug when importing over a multiple NNTP server setup.
+  [-] Fixed : Reg and mywords.lst files left in imported news dir.
+
+2.9.4 Built 07/07/2009
+  [-] Online installer download location moved into SF file space.
+  [-] Fixed : Initial DB import from users VirtualStore.
+  [-] Fixed : SpellChecker - Correct button not enabling correctly.
+  [-] Fixed : Toolbars not remembering previous positions correctly.
+  [-] Fixed : Importing an Export made in XP on a Vista/Win7 system did
+      not work correctly.
+
+2.9.3 Built 28/06/2009
+  [-] Online installer download location updated.
+
+2.9.2 Built 21/06/2009
+  [-] Fixed bugs in Import/Export and directory / registry naming.
+  [+] Added import button on first startup screen.
+
+2.9.1 Built 11/06/2009 (never released)
+
+  [+] Upgraded Gravity and installer. Gravity is now compatible with Vista
+      and Windows 7, following Microsoft conventions for user data storage.
+      In English this means that you can have multiple users on one PC and
+      they can each have their own set of settings and newsgroups. What
+      one user does does not affect any other user.
+      Old settings and newsgroup files, provided they haven't been moved,
+      are detected and imported.
+      Please note that if Gravity is to be used by more than one person
+      on the PC it must be installed by an administrator into the
+      recommended location. Once installed both administrator and standard
+      users can use Gravity.
+  [+] Upgraded to allow multiple versions of Gravity to co-exist.
+      Each different version of Gravity from 2.9 onwards has its own
+      database folder and its own registry settings.
+  [+] Added database and settings export and import. The archive file
+      format is Microsoft CAB(inet) compressed format and the files within
+      can be viewed and extracted with Microsoft Explorer.
+  [+] Enhanced spell checker, added edit box to enter your own words.
+  [+] Added new on-line installer, 350k download!
+      (For people without access to broadband the off-line installer will
+      continue to be available)
+  [-] Fixed error in Initial Setup dialog where the user could not quit.
+
+
+Please note that this is a BETA version. This is where new/modified
+features appear. Beta versions also act as a test platform for the next
+Stable version when quite a lot of things have been changed and the
+software needs a more thorough test by fellow beta testers.
+
+
+
+
+
+HISTORICAL CHANGE LOG
+=====================
+
+Please see the change log for 2.8.1

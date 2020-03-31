@@ -1,0 +1,291 @@
+Gravity Version 2.8 STABLE Open Source Change Log
+=========================================================================
+
+Build 1 Release
+  [-] Fixed SpellChecker ignoring case.
+  [+] Added highlighting of word being spell checked.
+
+
+Build 0 Release
+  [+] Added sort ascending/descending arrows to thread view.
+  [+] Added 2745988 : "User-Agent" and "X-Newsreader" to available choices
+      in Article Layout options.
+  [+] Changed 2546351 : Moved Copy/Select All to top level context menu
+      in Article window.
+  [-] Fixed 2622598 : "Sort by Name" in thread pane not working.
+  [-] Fixed 2637852 : Invalid post date in the list of Draft Posts.
+  [-] Fixed 2731453 : Error in startup check for "Default Newsreader".
+  [-] Fixed 2674637 : Intermittent lockup when quitting Gravity when it
+      is in the middle of downloading headers / bodies from server.
+  [+] Changed : Version numbering system.
+  [+] Added : Automatic Program Version Checking system
+  [-] Fixed : "Connect to Server" button images - at users request it
+      now works as it always used to.
+  [-] Removed : Help -> Using Help menu option.
+
+
+
+Please note that in stable versions only critical bugs will be fixed, so
+if you are using a stable version (i.e. 2.8) you should always be using
+the latest build for that version.
+
+Beta versions are where all the new/modified features appear. As new
+features are quite likely to contain bugs we recommend keeping an eye on
+the Gravity forums where we will let you know which builds are considered
+"stable", hence only download the very latest builds if you are either
+helping us to debug and add new features, or you don't mind being at the
+"bleeding edge" (hint : its called "bleeding" for a reason!!)
+
+
+
+
+HISTORICAL CHANGE LOG
+=====================
+
+
+Gravity Version 2.7.1 Open Source Change Log
+
+Build 11 : Beta release
+
+  [+] Added optimisations to the Compose window, when writing long
+        articles it should be noticably quicker now.
+  [+] Enabled program wide optimisations in the compiler.
+
+
+Build 10 : Beta release
+
+  [-] Fixed : 2603050 Problem when adjusting columns in Thread View
+  [-] Fixed : 2551581 Invalid Argument Error using Wrap Lines
+  [-] Fixed : 2546368 HTTPS link recognition
+  [-] Fixed : 2538282 Twisted column widths when thread windows is maximized
+  [-] Fixed : 2533528 Missing Separators in Thread Pane Headings
+  [-] Fixed : 1219993 Clicking second URL on a line does nothing
+
+
+Build 9 : Beta release
+
+  [+] Added : The Buttons are Back! The following have been added:-
+	Update Server Counts
+	Retrieve Tagged Articles
+	Purge and Compact Database
+	Skip to Next Unread
+	Skip to Next Unread in Thread
+	Skip to Next Unread Local
+	View Next Unread
+	View Next Unread in Thread
+	View Next Unread Local
+	Previous
+	Next
+	Copy
+	Print
+	Find
+	Search Google Groups
+	Subscribe...
+	Retrieve Newsgroup Headers
+	Get New Groups
+	Re-read All Groups
+	Newsgroup Properties
+	Watch Thread
+	Ignore Thread
+	Bozo Author
+	Show Full Headers
+	Mark Article Read
+	Mark Article Unread
+	Mark Article Protected
+	Delete Article
+	Forward Article via Mail
+	Save Article As
+	Un/Tag Article
+	Cancel Article
+	Gallery
+	Zoom In
+	Outbox
+	Apply Rule
+  [+] Updated : DejaNews has been changed to Google Groups.
+  [+] Added : Small border round main article pane to improve appearance.
+  [-] Fixed : Bug in the Rules and Filters dialog where an message would
+      appear when you tried to use parenthesis.
+  [-] Fixed : Missing validation on the Date/Time format field.
+  [-] Changed : Undo in compose dialog did not work properly. This has been
+      disabled for now. To be fixed properly at a later date.
+  [-] Fixed : "Back to Draft" from Outbox does not loose article body now.
+  [NOTE] This installer will OVERWRITE "DejaNewsUrl" in the registry with
+         the new URL for Google Groups. If you have customised this URL
+         please make a note of your customised URL *before* installation.
+         Once Gravity has been installed you may restore your customised URL
+         if desired.
+
+Build 8 : STABLE release
+
+  [-] Fixed the XFace corruption on scroll bug for keyboard Down, Up,
+      Page Down, Page Up, mouse wheel scroll, space bar scroll.
+  [+] Enhanced "Repair URL" - can now cope with wrapped URLs that have
+      been quoted.
+
+Build 7 : STABLE release
+
+  [-] Fixed bug with XFaces getting corrupted when the article window is
+      scrolled using scroll bar.
+
+Build 6 : BETA release
+
+  [-] Fixed bug in Follow up dialog - Quoted text should be coloured.
+  [-] Fixed bug in New post/Follow up dialog - if more than 1 page of text
+      and typing at or near top the text would jump around.
+
+Build 5 : BETA release
+
+  [-] Fixed bug where the date / time format of newsgroup view lost user changes.
+  [-] Fixed bug where the newsgroup view header selection lost user changes.
+
+Build 4 : BETA release
+
+  [-] Fixed bug when replying by email which caused an incorrect email
+      address to be used.
+  [+] Added GravityBackup software into default installation.
+
+Build 3 : BETA release
+
+  [-] FIXED - Crash when replying via email.
+
+Build 2 : BETA release
+
+  [-] FIXED - Crash when an article incorrectly identified itself
+      as Quoted Printable.
+  [+] NEW - Installer rebuilt with current Gravity version.
+
+Build 1 : BETA release
+
+  [+] The "Quoted text muted" text now only appears if text
+      has been muted.
+  [-] Fixed crash on startup after initial setup.
+  [-] Fixed Content-Type encoding bug when pure 7 bit
+      message, now set to "us-ascii".
+  [-] Fixed crash when loading corrupted Outbox file.
+  [+] Removed invalid articles from Outbox file.
+  [-] Fixed bug in spell checker.
+  [+] Added skipping of URLs in spell checker, specifically
+      anything that begins with:-
+      http:
+      https:
+      url:
+      mailto:
+      nntp:
+  [+] More improvements to Spell checker.
+      . Signatures are now not spell checked.
+      . telnet and gopher URLs are now ignored.
+      . Improvements to word splitting.
+  [+] Signatures in article view are now coloured in light
+      grey with 8 pt font.
+  [-] Tweeks to toolbar filter size and alignment.
+  [+] Conversion of all source code and projects to compile under
+      Microsoft Visual Studio 2005.
+
+
+Gravity Version 2.7 Open Source Change Log
+
+Note: ! make backups of FILTER.DAT and FILTER2.DAT !
+       there are some backward compatibility issues
+
+=========================================================================
+
+Build 2067 Removed locale settings that were causing posting problems
+           for non-US settings
+
+Build 2066
+
+  [+] NEW - Spell checking with MySpell. Read these instructions
+
+     a) The dictionary and the .aff file should be put into the
+        Gravity\spell directory
+
+     b) Manually create the "mywords.lst" in the spell directory;  this 
+        is the customized words to ignore list
+
+  [+] NEW - adds character sets: 8859-13, 8859-14, 8859-16
+
+  [+] NEW - added a Article -> Character coding menu item. Sets
+      a default character set for articles that do not have a
+      Content-type, Content-transfer-encoding header.
+
+      (I think this does not work on "From" and "Subject" at this
+       point)
+
+  [-] FIXED - relaxed a MIME boundary thing. Encoded words without
+      spaces did not display decoded. The posting software (OE) is
+      technically wrong, but Gravity handles it.
+
+  [-] FIXED - fixed a weird Tagging selection problem that was in
+      most earlier Gravity versions.
+
+
+===========================================================================
+
+Build 2.7 2064
+
+  [+] NEW - Additional charset support
+
+      - UTF-8
+      - UTF-7 (read only)
+      - Windows 125x (read only)
+      - KOIR-8
+      - Tweaked RFC 2047 to display some incorrectly encoded stuff
+
+  [+] NEW - Re-Wrapping, use CONTROL-W (thanks Jon Skeet). It
+      works in the follow up window.
+
+  [+] NEW - Reply-To: 7-bit also displays nicely instead of
+      ?iso-8859-1?q?= stuff. 
+
+  Note: to see the char set effects you may need to unsubscribe
+        and resubscribe to the newsgroup. Also, some fonts are limited.
+        "Lucinda Sans Unicode" works good as well as some others.
+        (If you use GIMP you can see which fonts have a large amount
+         of characters with the text tool)
+
+Most of the following were rolled in from 2.6 2060 (not open source)
+
+  [+] NEW - "Repair URL" command (right click in article pane) allows you
+      to send a wrapped URL to the browser.
+      Usage: Highlight the entire URL - right click - select "Repair URL"
+
+
+  [+] NEW - "Back to Draft" command sends an article from the
+      Outbox back to the draft folder for re-editing. It is
+      intended to replace the "Back to Editing" button that
+      was in earlier versions
+
+  [+] NEW - "Decode to" command overrides the decode directories
+      Command: "Article - Decode to .." I think this was there,
+      but rolled back into 2.6
+
+  [+] NEW - Check box to turn on/off X-Faces
+      Command: View - Global Options - Display - Show X-Faces
+
+  [-] FIXED - Created date in draft message window
+
+  [-] FIXED - URL highlighting works as it did before. Copying an URL
+      with the mouse does not cause the link to open the browser.
+
+
+===========================================================================
+
+Build 2.7 2061
+
++ Fixed an X-Face bug in the earlier build not released
+  on SourceForge
++ Added some modest ability to customize the toolbar
++ Perl Compatible Regular Expressions (PCREs)
++ X-Face support
++ A Complete Binaries check box for filters
+
+- Removed some useless bitmaps and files from the code
+- Spell checker removed
+- Tool bar commands are limited
+- Gallery and GravityBackup are not open source and will not
+  be posted to Sourceforge. They may be downloaded, if
+  wanted,  from one of the Gravity download sites from
+  the following URLs.
+
+http://lightning.prohosting.com/~tbates/gravity/
+http://gravity.tbates.org/

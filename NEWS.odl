@@ -1,0 +1,63 @@
+// News.odl : type library source for News.exe
+import "oaidl.idl";
+
+// This file will be processed by the Make Type Library (mktyplib) tool to
+// produce the type library (News.tlb).
+
+[ uuid(ABF68601-5A1B-11CE-A7E5-444553540000), version(1.0) ]
+library Gravity
+{
+	importlib("stdole32.tlb");
+	
+	//  Primary dispatch interface for CNewsDoc
+	
+	[ uuid(ABF68602-5A1B-11CE-A7E5-444553540000) ]
+	dispinterface IGravity
+	{
+		properties:
+			// NOTE - ClassWizard will maintain property information here.
+			//    Use extreme caution when editing this section.
+			//{{AFX_ODL_PROP(CNewsDoc)
+			//}}AFX_ODL_PROP
+			
+		methods:
+			// NOTE - ClassWizard will maintain method information here.
+			//    Use extreme caution when editing this section.
+			//{{AFX_ODL_METHOD(CNewsDoc)
+			//}}AFX_ODL_METHOD
+
+	};
+	[
+		object,
+		uuid(BAA92455-AC7F-4C1A-AA22-9CDA0A8EED06),
+		dual,
+		helpstring("IGravityNewsgroup Interface"),
+		pointer_default(unique)
+	]
+	interface IGravityNewsgroup : IDispatch
+	{
+		[id(1), helpstring("method GetArticleNumbers")] HRESULT GetArticleNumbers([out] VARIANT * pVar);
+		[id(2), helpstring("method IsArticleProtected")] HRESULT IsArticleProtected([in] long lArticleNum);
+		[id(3), helpstring("method ArticleSetProtected")] HRESULT ArticleSetProtected([in] long lArtNum, [in] long  fProtected);
+		[id(4), helpstring("method GetArticleByNumber")] HRESULT GetArticleByNumber([in] long lArtNum, [out] BSTR * pbstrArticle);
+		[id(5), helpstring("method Open")] HRESULT Open([in] BSTR bsNewsgroup);
+	};
+
+	//  Class information for CNewsDoc
+	
+	[ uuid(ABF68600-5A1B-11CE-A7E5-444553540000) ]
+	coclass CNewsDoc
+	{
+		[default] dispinterface IGravity;
+	};
+
+	//{{AFX_APPEND_ODL}}
+	[
+		uuid(F480A25B-2176-45C5-973C-1A1A83E8F426),
+		helpstring("GravityNewsgroup Class")
+	]
+	coclass GravityNewsgroup
+	{
+		[default] interface IGravityNewsgroup;
+	};
+};

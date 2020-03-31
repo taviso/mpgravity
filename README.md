@@ -20,7 +20,7 @@ out these sources, and type make.
 
 
 ```
-C:\..\mpgravity> make
+C:\..\mpgravity\src> make
 ```
 
 As far as I know, you only need `MSVC`, `MFC` and the `SDK` components of

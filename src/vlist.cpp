@@ -1014,6 +1014,7 @@ LRESULT  EXPORT WINAPI LBSubclassProc(HWND hwnd, UINT message, WPARAM wParam, LP
 		return SendMessage(GetParent(hwnd), message, wParam, lParam);
 
 	case _LB_MOUSESCROLL:
+	case WM_MOUSEWHEEL:
 		//
 		// Check for scroll then pass message on the the LB
 		//

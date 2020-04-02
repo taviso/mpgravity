@@ -142,6 +142,7 @@ BEGIN_MESSAGE_MAP(TSubscribeDlg, CDialog)
 	ON_WM_GETMINMAXINFO()
 	ON_WM_CLOSE()
 	ON_WM_HSCROLL()
+	ON_WM_MOUSEWHEEL()
 
    ON_LBN_SELCHANGE (IDC_GROUP_LIST, OnGroupListSelchange)
 END_MESSAGE_MAP()
@@ -879,6 +880,18 @@ void TSubscribeDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
       }
 
 	CDialog::OnHScroll(nSBCode, nPos, pScrollBar);
+}
+
+BOOL TSubscribeDlg::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
+{
+    CListBox* pLB = GetGroupList();
+
+    if (zDelta < 0) {
+        pLB->SendMessage(VLB_PAGEDOWN, WPARAM(0), LPARAM(0));
+    } else {
+        pLB->SendMessage(VLB_PAGEUP, WPARAM(0), LPARAM(0));
+    }
+    return 1;
 }
 
 // -------------------------------------------------------------------------

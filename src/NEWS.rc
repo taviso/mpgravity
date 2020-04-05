@@ -9,7 +9,6 @@
 //
 #include "afxres.h"
 #include "dlgs.h"
-#include <richedit.h>    /* ES_SAVESEL */
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS

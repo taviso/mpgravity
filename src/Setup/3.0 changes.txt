@@ -2,6 +2,7 @@ Gravity Version 3.0 Stable Open Source Change Log
 =========================================================================
 
 3.0.5
+  [+] Upgraded : Gravity now builds with VS2019.
   [+] Added : Mouse scroll wheel now works in subscription dialog.
   [+] Added : New rule syntax "Cross-posted to alt.terrible.group".
   [-] Fixed : Dialog titles could sometimes contain garbage.

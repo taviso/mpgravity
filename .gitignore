@@ -8,5 +8,6 @@
 *.exp
 *.ilk
 *.lib
+.nobackup
 NEWS_i.c
 NEWS_i.h

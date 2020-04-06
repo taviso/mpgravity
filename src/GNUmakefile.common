@@ -1,0 +1,51 @@
+# vim: syntax=make
+CC=cl.exe
+RC=rc.exe
+AR=lib.exe
+MIDL=midl.exe
+CPPFLAGS=/D NDEBUG /D WIN32
+RFLAGS=/nologo
+CFLAGS=/nologo $(CPPFLAGS) /Zi /O2 /guard:cf /FS /GA
+LFLAGS=/nologo /machine:x86 /subsystem:windows
+MFLAGS=
+CXXFLAGS=$(CFLAGS) /EHsc
+LDLIBS=
+LDFLAGS=/MD
+LINKFLAGS=/ignore:4099 /subsystem:windows
+
+.PHONY: clean
+.DEFAULT_GOAL = all
+
+%_i.h: %.odl
+	$(MIDL) $(MFLAGS) /h $@ $<
+
+%_i.c: %.odl
+	$(MIDL) $(MFLAGS) /iid $@ $<
+
+%.obj: %.cpp
+	$(CC) $(CXXFLAGS) /c /Fo:$@ $<
+
+%.res: %.rc
+	$(RC) $(RFLAGS) $<
+
+%.obj: %.cc
+	$(CC) $(CXXFLAGS) /c /Fo:$@ $<
+
+%.obj: %.cxx
+	$(CC) $(CXXFLAGS) /c /Fo:$@ $<
+
+%.obj: %.c
+	$(CC) $(CFLAGS) /c /Fo:$@ $<
+
+%.exe: %.obj
+	$(CC) $(CFLAGS) $(LDFLAGS) /Fe:$@ $^ /link $(LINKFLAGS) $(LDLIBS:=.lib)
+
+%.dll: %.obj
+	$(CC) $(CFLAGS) $(LDFLAGS) /LD /Fe:$@ $^ /link $(LINKFLAGS)
+
+%.lib: %.obj
+	$(AR) $(LFLAGS) /OUT:$@ $^
+
+clean::
+	-cmd.exe /c del /q /f *.exp *.exe *.obj *.pdb *.ilk *.xml *.res *.ipdb *.iobj *.dll *.tmp
+	-cmd.exe /c del /q /f *.manifest *.lib *.tlb

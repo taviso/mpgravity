@@ -1,22 +1,9 @@
-CC=cl.exe
-RC=rc.exe
-MIDL=midl.exe
-MSBUILD=msbuild.exe
-CMAKE=cmake.exe
-CPPFLAGS=/I include /D NDEBUG /D WIN32 /D MICROPLANET /D MP_PACKBYTE /D _USE_32BIT_TIME_T
-RFLAGS=/nologo
-CFLAGS=/nologo $(CPPFLAGS) /Zi /O2 /guard:cf /FS
-LFLAGS=/nologo /machine:x86
-VFLAGS=-no_logo
-MFLAGS=/p:Configuration=Release /nologo /m /v:q
-MIDLFLAGS=
-CXXFLAGS=/nologo $(CPPFLAGS) /Zi /O2 /EHsc /GA /guard:cf /FS
-LDLIBS=comctl32 winmm version
-LDFLAGS=/MD
-LINKFLAGS=/ignore:4099 /subsystem:windows
-VSDEVCMD=cmd.exe /c vsdevcmd.bat
+include GNUmakefile.common
 
-.PHONY: clean
+CPPFLAGS +=/I include /D MICROPLANET /D MP_PACKBYTE /D _USE_32BIT_TIME_T
+LDLIBS   +=comctl32 winmm version winface compface zlib
+LINKFLAGS+=/LIBPATH:libwinface /LIBPATH:compface /LIBPATH:zlib
+
 
 all: mpgravity.exe
 
@@ -109,63 +96,34 @@ Png:=$(addprefix png/code/,$(Png))
 Pcre=chartables.c get.c maketables.c pcre.c study.c
 Pcre:=$(addprefix pcre/,$(Pcre))
 
-Winface=facebmp.c
-Winface:=$(addprefix libwinface/,$(Winface))
-
-Zlib=adler32.c compress.c crc32.c deflate.c gzio.c infback.c inflate.c         \
-        inffast.c inftrees.c trees.c uncompr.c zutil.c
-Zlib:=$(addprefix zlib/code/,$(Zlib))
-
-Compface=arith.c compface.c compress.c file.c gen.c uncompface.c
-Compface:=$(addprefix compface/,$(Compface))
-
-%_i.h: %.odl
-	$(MIDL) $(MIDLFLAGS) /h $@ $<
-
-%_i.c: %.odl
-	$(MIDL) $(MIDLFLAGS) /iid $@ $<
-
-%.obj: %.cpp
-	$(CC) $(CXXFLAGS) /c /Fo:$@ $<
-
-%.res: %.rc
-	$(RC) $(RFLAGS) $<
-
-%.obj: %.cc
-	$(CC) $(CXXFLAGS) /c /Fo:$@ $<
-
-%.obj: %.cxx
-	$(CC) $(CXXFLAGS) /c /Fo:$@ $<
-
-%.obj: %.c
-	$(CC) $(CFLAGS) /c /Fo:$@ $<
-
-%.exe: %.obj
-	$(CC) $(CFLAGS) $(LDFLAGS) /Fe:$@ $^ /link $(LINKFLAGS) $(LDLIBS:=.lib)
-
-%.dll: %.obj
-	$(CC) $(CFLAGS) $(LDFLAGS) /LD /Fe:$@ $^ /link $(LINKFLAGS)
-
 $(Sources:.cpp=.obj): | NEWS_i.h NEWS_i.c
+$(HelperClasses:.cpp=.obj): | NEWS_i.h NEWS_i.c
+$(ArticleView:.cpp=.obj): | NEWS_i.h NEWS_i.c
+$(ThreadView:.cpp=.obj): | NEWS_i.h NEWS_i.c
+$(GroupView:.cpp=.obj): | NEWS_i.h NEWS_i.c
+$(ComposeDlg:.cpp=.obj): | NEWS_i.h NEWS_i.c
+$(MainWindow:.cpp=.obj): | NEWS_i.h NEWS_i.c
+$(OptionsSetup:.cpp=.obj): | NEWS_i.h NEWS_i.c
+$(Rules:.cpp=.obj): | NEWS_i.h NEWS_i.c
+$(Binaries:.cpp=.obj): | NEWS_i.h NEWS_i.c
 
 mpgravity.exe: $(Sources:.cpp=.obj) $(HelperClasses:.cpp=.obj)                 \
         $(ArticleView:.cpp=.obj) $(ThreadView:.cpp=.obj)                       \
         $(GroupView:.cpp=.obj) $(ComposeDlg:.cpp=.obj) $(MainWindow:.cpp=.obj) \
         $(OptionsSetup:.cpp=.obj) $(Rules:.cpp=.obj) $(Binaries:.cpp=.obj)     \
         $(Hunspell:.cxx=.obj) $(Png:.c=.obj) $(Pcre:.c=.obj)                   \
-        $(Winface:.c=.obj) $(Zlib:.c=.obj) $(Compface:.c=.obj)                 \
-        NEWS.res | NEWS_i.h NEWS_i.c
+        NEWS.res
+	make -C libwinface
+	make -C compface
+	make -C zlib
 	$(CC) $(CFLAGS) $(LDFLAGS) /Fe:$@ $^ /link $(LINKFLAGS) $(LDLIBS:=.lib)
 
 
-clean:
-	-cmd.exe /c del /q /f *.exp *.exe *.obj *.pdb *.ilk *.xml *.res *.ipdb *.iobj *.dll *.tmp
-	-cmd.exe /c del /q /f *.manifest *.lib *.tlb
+clean::
 	-cmd.exe /c del /q /f NEWS_i.h NEWS_i.c
-	-cmd.exe /c del /q /f zlib\\code\\*.obj
 	-cmd.exe /c del /q /f png\\code\\*.obj
 	-cmd.exe /c del /q /f pcre\\*.obj
-	-cmd.exe /c del /q /f libwinface\\*.obj
 	-cmd.exe /c del /q /f hunspell-1.2.8\\src\\hunspell\\*.obj
-	-cmd.exe /c del /q /f compface\\*.obj
-
+	make -C libwinface clean
+	make -C compface clean
+	make -C zlib clean

@@ -3575,7 +3575,7 @@ LRESULT CMainFrame::OnCheckForUpdate(WPARAM, LPARAM lParam)
 // Retreives the version number of the latest version of Gravity
 // from the main website and checks it against our version.
 //
-// http://mpgravity.sourceforge.net/latest/version.txt
+// https://raw.githubusercontent.com/taviso/mpgravity/master/stable_ver.txt
 //
 bool CMainFrame::CheckForProgramUpdate(bool &bFailed, bool bCheckBetaAgainstStable /* = false */)
 {
@@ -3586,16 +3586,16 @@ bool CMainFrame::CheckForProgramUpdate(bool &bFailed, bool bCheckBetaAgainstStab
 
 	CString strURL;
 	if (verInfo.m_bBeta && !bCheckBetaAgainstStable)
-		strURL = _T("http://mpgravity.sourceforge.net/latest/beta_ver.txt");
+		strURL = _T("https://raw.githubusercontent.com/taviso/mpgravity/master/beta_ver.txt");
 	else
-		strURL = _T("http://mpgravity.sourceforge.net/latest/stable_ver.txt");
+		strURL = _T("https://raw.githubusercontent.com/taviso/mpgravity/master/stable_ver.txt");
 
 	CInternetSession ses;
 	ses.SetOption(INTERNET_OPTION_CONNECT_TIMEOUT, (DWORD)5000);
 	CHttpFile *pFile = NULL;
 	try
 	{
-		pFile = (CHttpFile*)ses.OpenURL(strURL, 1, INTERNET_FLAG_TRANSFER_ASCII|INTERNET_FLAG_RELOAD|INTERNET_FLAG_DONT_CACHE);
+		pFile = (CHttpFile*)ses.OpenURL(strURL, 1, INTERNET_FLAG_TRANSFER_ASCII|INTERNET_FLAG_RELOAD|INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_SECURE);
 		if (pFile)
 		{
 			CString strLine, strTemp;

@@ -72,7 +72,7 @@ public:
    void SetThread (TUtilityThread *pUtilityThread)
       { m_pUtilityThread = pUtilityThread; }
    int GetSelectedIndex ();
-   static enum Position {WAIT_Q, CURRENT, COMPLETED};
+   enum Position {WAIT_Q, CURRENT, COMPLETED};
    void SetPosition (Position iPos) { m_iMyPosition = iPos; }
    virtual void MakeColumns () = 0;
    void InsertJob (void *pJob, int iID, int iIndex = -1);

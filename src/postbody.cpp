@@ -101,8 +101,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "hints.h"               // SENDHINT_80CHARPERLINE
 #include "fileutil.h"            // NewsMessageBox
 #include "licutil.h"             // TLicenseSystem
-//#include "myspell30\myspell.hxx" // MySpell 3.0 from OpenOffice.org
-#include "hunspell-1.2.8\src\hunspell\hunspell.hxx"
+#include "hunspell\hunspell.hxx"
 #include "arttext.h"             // ArticleCreateField
 #include "rgswit.h"              // TRegSwitch object
 #include "rgsys.h"				 // TRegSystem object

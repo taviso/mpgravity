@@ -106,8 +106,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "tsubjctx.h"
 #include "genutil.h"                   // evil  GetNewsView()
 
-//#include "myspell30\myspell.hxx"
-#include "hunspell-1.2.8\src\hunspell\hunspell.hxx"
+#include "hunspell\hunspell.hxx"
 #include "mywords.h"
 
 #ifdef _DEBUG

@@ -3,15 +3,21 @@ CC=cl.exe
 RC=rc.exe
 AR=lib.exe
 MIDL=midl.exe
+MB=msbuild.exe
 CPPFLAGS=/D NDEBUG /D WIN32
 RFLAGS=/nologo
-CFLAGS=/nologo $(CPPFLAGS) /Zi /O2 /guard:cf /FS /GA
-LFLAGS=/nologo /machine:x86 /subsystem:windows
+CFLAGS=/nologo $(CPPFLAGS) /Zi /O2 /guard:cf /FS /GA /GL /GF
+LFLAGS=/nologo /machine:x86 /subsystem:windows /LTCG
 MFLAGS=
 CXXFLAGS=$(CFLAGS) /EHsc
 LDLIBS=
-LDFLAGS=/MD
-LINKFLAGS=/ignore:4099 /subsystem:windows
+LDFLAGS=/MT /GL
+LINKFLAGS=/ignore:4099 /subsystem:windows /LTCG
+CMFLAGS=-A Win32 -D CMAKE_BUILD_TYPE=Release
+MBFLAGS=/nologo /m                      \
+    /p:Configuration=Release            \
+    /p:PlatformToolset=v142             \
+    /p:WindowsTargetPlatformVersion=10
 
 .PHONY: clean
 .DEFAULT_GOAL = all

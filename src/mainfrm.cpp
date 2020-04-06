@@ -3519,7 +3519,7 @@ void CMainFrame::AttachToolbarImages (UINT inNormalImageID,
 
 void CMainFrame::OnHelpVisitTheGravityWebsite()
 {
-	CString strGravityWebsite("http://mpgravity.sourceforge.net/");
+	CString strGravityWebsite("https://github.com/taviso/mpgravity");
 
 	ShellExecute (GetDesktopWindow ()->m_hWnd /* parent window */,
 		_T("open")          /* command */,
@@ -3603,6 +3603,7 @@ bool CMainFrame::CheckForProgramUpdate(bool &bFailed, bool bCheckBetaAgainstStab
 			// Read the first line (is all we need)
 			if (pFile->ReadString(strLine))
 			{
+			    ::MessageBox(NULL, strLine, "read", 0);
 				// Check for a 404 error
 				if (strLine.Find(_T("404")) == -1)
 				{

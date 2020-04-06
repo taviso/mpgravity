@@ -7,7 +7,7 @@ This is zlib 1.2.11, these are the steps I took to upgrade it
 
 
 ```
-$ cmake.exe -S . -B build
+$ cmake.exe -A Win32 -S . -B build
 ```
 
 * Dump the required files from zlib.vcxproj, remove everything else.

@@ -844,6 +844,13 @@ BOOL CNewsApp::InitInstance()
 	free((void*)m_pszAppName);
 	m_pszProfileName = _tcsdup(strProfileName);
 	m_pszAppName = _tcsdup(strProfileName);
+
+	// Antti Nivala writes,
+	// "AfxGetAppName() returns AfxGetModuleState()->m_lpszCurrentAppName, and that
+	// pointer is not updated if you change the application name as instructed in
+	// the documentation. To be safe, you must manually update the pointer after
+	// you have changed the application name."
+	AfxGetModuleState()->m_lpszCurrentAppName = m_pszAppName;
 	AfxEnableMemoryTracking(bEnable);
 
 	if (RenameBranchAnawaveToMicroplanet() == false)

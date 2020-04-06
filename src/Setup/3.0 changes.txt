@@ -4,6 +4,7 @@ Gravity Version 3.0 Stable Open Source Change Log
 3.0.5
   [+] Added : Mouse scroll wheel now works in subscription dialog.
   [+] Added : New rule syntax "Cross-posted to alt.terrible.group".
+  [-] Fixed : Dialog titles could sometimes contain garbage.
 
 3.0.4 STABLE Built + Released 12/9/2010
   [-] Fixed : Fixed error in 3.0.3 installer which made it impossible to

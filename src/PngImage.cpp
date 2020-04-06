@@ -217,7 +217,7 @@ void ReadPNGFromResource(png_structp pPngStruct, png_bytep pBuff, png_size_t byt
 		return;
 	}
 
-	PngResourceInfo *pPngInfo = (PngResourceInfo *)pPngStruct->io_ptr;
+	PngResourceInfo *pPngInfo = (PngResourceInfo *)png_get_io_ptr(pPngStruct);
 
 	if (!pPngInfo)
 	{

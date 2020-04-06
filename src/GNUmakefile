@@ -1,9 +1,9 @@
 include GNUmakefile.common
 
 CPPFLAGS +=/I include /D MICROPLANET /D MP_PACKBYTE /D _USE_32BIT_TIME_T
-LDLIBS   +=comctl32 winmm version winface compface zlib
-LINKFLAGS+=/LIBPATH:libwinface /LIBPATH:compface /LIBPATH:zlib
-
+CPPFLAGS +=/D PCRE_STATIC
+LDLIBS   +=comctl32 winmm version winface compface zlib pcre
+LINKFLAGS+=/LIBPATH:libwinface /LIBPATH:compface /LIBPATH:zlib /LIBPATH:pcre
 
 all: mpgravity.exe
 
@@ -93,9 +93,6 @@ Png=png.c pngerror.c pngget.c pngmem.c pngpread.c pngread.c pngrio.c           \
         pngwrite.c pngwtran.c pngwutil.c
 Png:=$(addprefix png/code/,$(Png))
 
-Pcre=chartables.c get.c maketables.c pcre.c study.c
-Pcre:=$(addprefix pcre/,$(Pcre))
-
 $(Sources:.cpp=.obj): | NEWS_i.h NEWS_i.c
 $(HelperClasses:.cpp=.obj): | NEWS_i.h NEWS_i.c
 $(ArticleView:.cpp=.obj): | NEWS_i.h NEWS_i.c
@@ -111,19 +108,19 @@ mpgravity.exe: $(Sources:.cpp=.obj) $(HelperClasses:.cpp=.obj)                 \
         $(ArticleView:.cpp=.obj) $(ThreadView:.cpp=.obj)                       \
         $(GroupView:.cpp=.obj) $(ComposeDlg:.cpp=.obj) $(MainWindow:.cpp=.obj) \
         $(OptionsSetup:.cpp=.obj) $(Rules:.cpp=.obj) $(Binaries:.cpp=.obj)     \
-        $(Hunspell:.cxx=.obj) $(Png:.c=.obj) $(Pcre:.c=.obj)                   \
-        NEWS.res
+        $(Hunspell:.cxx=.obj) $(Png:.c=.obj) NEWS.res
 	make -C libwinface
 	make -C compface
 	make -C zlib
+	make -C pcre
 	$(CC) $(CFLAGS) $(LDFLAGS) /Fe:$@ $^ /link $(LINKFLAGS) $(LDLIBS:=.lib)
 
 
 clean::
 	-cmd.exe /c del /q /f NEWS_i.h NEWS_i.c
 	-cmd.exe /c del /q /f png\\code\\*.obj
-	-cmd.exe /c del /q /f pcre\\*.obj
 	-cmd.exe /c del /q /f hunspell-1.2.8\\src\\hunspell\\*.obj
 	make -C libwinface clean
 	make -C compface clean
 	make -C zlib clean
+	make -C pcre clean

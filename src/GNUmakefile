@@ -107,7 +107,7 @@ mpgravity.exe: $(Sources:.cpp=.obj) $(HelperClasses:.cpp=.obj)                 \
 	make -C hunspell
 	make -C png
 	$(CC) $(CFLAGS) $(LDFLAGS) /Fe:$@ $^ /link $(LINKFLAGS) $(LDLIBS:=.lib)
-
+	$(MT) $(MTFLAGS) -manifest $@.manifest -outputresource:"$@;1"
 
 clean::
 	-cmd.exe /c del /q /f NEWS_i.h NEWS_i.c

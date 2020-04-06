@@ -7,6 +7,7 @@ Gravity Version 3.0 Stable Open Source Change Log
   [+] Added : New rule syntax "Cross-posted to alt.terrible.group".
   [-] Fixed : Dialog titles could sometimes contain garbage.
   [+] Upgraded: zlib 1.2.3 (from 2005) to 1.2.11 (from 2017).
+  [+] Upgraded: pcre 4.4 (from 2003!) to 8.8 (from 2020).
 
 3.0.4 STABLE Built + Released 12/9/2010
   [-] Fixed : Fixed error in 3.0.3 installer which made it impossible to

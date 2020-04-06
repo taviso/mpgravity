@@ -11,7 +11,7 @@
 #include "dlgs.h"
 
 #ifndef RICHEDIT_CLASS
-# define RICHEDIT_CLASS "RICHEDIT"
+# define RICHEDIT_CLASS "RichEdit20A"
 #endif
 
 /////////////////////////////////////////////////////////////////////////////

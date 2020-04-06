@@ -78,6 +78,8 @@ public:
 	CButton	m_sRE;
 	CEdit	m_sLines;
 	CEdit	m_sPhrase;
+	CEdit	m_sCrossGroup;
+	CString m_strCrossGroup;
 	CComboBox	m_sYesNo;
 	CComboBox	m_sArticleField;
 	long	m_lLines;
@@ -116,6 +118,7 @@ protected:
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
 	afx_msg void OnInList();
 	afx_msg void OnMarkedAs();
+	afx_msg void OnCrosspostedGroup();
 	afx_msg void OnPostTime();
 	afx_msg void OnRuleImportCond();
 	afx_msg void OnScoreMoreThan();
@@ -176,6 +179,7 @@ protected:
 #define MARKED_AS_LOCAL             31
 #define MARKED_AS_TAGGED            32
 #define SCORE_MORE_THAN             33
+#define CROSSPOSTED_GROUP_NODE      34
 
 #define UNBALANCED_PARENS           1
 #define UNEXPECTED_TOKEN            2

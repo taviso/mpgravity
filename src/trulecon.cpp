@@ -281,6 +281,7 @@ static int ConstructFactor (const CStringArray& rstrArray,
 	  case FROM_CONTAINS_NOT_NODE:
 	  case BODY_CONTAINS_NOT_NODE:
 	  case CROSSPOSTED_NODE:
+	  case CROSSPOSTED_GROUP_NODE:
 	  case IN_WATCH_LIST_NODE:
 	  case IN_IGNORE_LIST_NODE:
 	  case MARKED_AS_UNREAD:
@@ -417,18 +418,27 @@ static int GetNextToken (const CStringArray &rstrArray, int &iLineIndex,
 	if (!strWord.CompareNoCase (str) ||
 		!strWord.CompareNoCase (str1)) {
 
-			if (VerifyWord (rstrArray, iLineIndex, iIndex, IDS_TO) ||
-				VerifyWord (rstrArray, iLineIndex, iIndex, ">"))
+			if (VerifyWord (rstrArray, iLineIndex, iIndex, IDS_TO))
 				return 0;
 
-			// strPhrase returns the number of groups (as a string)
 			if (GetWord (rstrArray, iLineIndex, iIndex, strPhrase))
 				return 0;
 
-			if (VerifyWord (rstrArray, iLineIndex, iIndex, IDS_GROUPS))
-				return 0;
+            // crossposted to > 123
+			if (strPhrase.CompareNoCase (">") == 0) {
+				// strPhrase returns the number of groups (as a string)
+				if (GetWord (rstrArray, iLineIndex, iIndex, strPhrase))
+					return 0;
 
-			return CROSSPOSTED_NODE;
+				if (VerifyWord (rstrArray, iLineIndex, iIndex, IDS_GROUPS))
+					return 0;
+
+				return CROSSPOSTED_NODE;
+			} else {
+				// It must be a group name
+				// crossposted to alt.whatever.name
+				return CROSSPOSTED_GROUP_NODE;
+			}
 	}
 
 	str.LoadString (IDS_POSTED);
@@ -707,6 +717,7 @@ TRuleConditions::TRuleConditions (LPCTSTR pchStaticCondition /* = NULL */)
 	m_iAttribute = -1;
 	m_iDaysAgo = 0;
 	m_lScore = 0;
+	m_strCrossGroup = _T("");
 
 
 	if (pchStaticCondition)
@@ -735,6 +746,7 @@ void TRuleConditions::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_FIELD_PHRASE, m_sPhrase);
 	DDX_Control(pDX, IDC_FIELD_YES_NO, m_sYesNo);
 	DDX_Control(pDX, IDC_ARTICLE_FIELD, m_sArticleField);
+	DDX_Control(pDX, IDC_FIELD_GROUPNAME, m_sCrossGroup);
 	DDX_Text(pDX, IDC_LINES, m_lLines);
 	DDV_MinMaxLong(pDX, m_lLines, 0, 999999);
 	DDX_CBIndex(pDX, IDC_FIELD_YES_NO, m_iYesNo);
@@ -748,7 +760,7 @@ void TRuleConditions::DoDataExchange(CDataExchange* pDX)
 	DDX_CBIndex(pDX, IDC_ATTRIBUTE, m_iAttribute);
 	DDX_Text(pDX, IDC_DAYS_AGO, m_iDaysAgo);
 	DDX_Text(pDX, IDC_SCORE, m_lScore);
-
+	DDX_Text(pDX, IDC_FIELD_GROUPNAME, m_strCrossGroup);
 
 	if (!m_strStaticCondition.IsEmpty ()) {
 		DDX_Control(pDX, IDC_STATIC_CONDITION, m_sStaticCondition);
@@ -774,6 +786,7 @@ BEGIN_MESSAGE_MAP(TRuleConditions, CPropertyPage)
 	ON_WM_SHOWWINDOW()
 	ON_BN_CLICKED(IDC_IN_LIST, OnInList)
 	ON_BN_CLICKED(IDC_MARKED_AS, OnMarkedAs)
+	ON_BN_CLICKED(IDC_CROSSPOSTED_GROUP, OnCrosspostedGroup)
 	ON_BN_CLICKED(IDC_POST_TIME, OnPostTime)
 	ON_BN_CLICKED(IDC_RULE_IMPORT_COND, OnRuleImportCond)
 	ON_BN_CLICKED(IDC_SCORE_MORE_THAN, OnScoreMoreThan)
@@ -799,6 +812,7 @@ void TRuleConditions::UpdateGreyStates ()
 	m_sScore.EnableWindow (m_iRadio == 5);
 	m_sListName.EnableWindow (m_iRadio == 6);
 	m_sAttribute.EnableWindow (m_iRadio == 7);
+	m_sCrossGroup.EnableWindow (m_iRadio == 8);
 }
 
 // -------------------------------------------------------------------------
@@ -1143,6 +1157,18 @@ void TRuleConditions::OnAddRuleCondition()
 			  strItem += str;
 		  }
 		  break;
+	  case 8:
+		  {
+			  CString strPosted, strTo;
+			  strPosted.LoadString (IDS_CROSSPOSTED);
+			  strTo.LoadString (IDS_TO);
+			  strItem.Format ("%s %s %s", strPosted, strTo, m_strCrossGroup);
+
+			  TServerCountedPtr psServer;
+			  if (!psServer -> GetFullCrossPost ())
+				  MsgResource (IDS_USE_CROSSPOST_OPTION);
+		  }
+		  break;
 	  default:
 		  ASSERT (0);
 		  break;
@@ -1333,6 +1359,11 @@ void TRuleConditions::OnInList()
 
 // -------------------------------------------------------------------------
 void TRuleConditions::OnMarkedAs()
+{
+	UpdateGreyStates();
+}
+
+void TRuleConditions::OnCrosspostedGroup()
 {
 	UpdateGreyStates();
 }

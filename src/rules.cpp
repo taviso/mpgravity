@@ -854,6 +854,21 @@ int EvaluateCondition (Condition * psCondition, TArticleHeader* pArtHdr,
 				return 0;
 		}
 
+		case CROSSPOSTED_GROUP_NODE:
+			{
+				CStringList grpList;
+				POSITION grpPos;
+				CString grp;
+				pArtHdr->GetNewsGroups(&grpList);
+				for (grpPos = grpList.GetHeadPosition(); grpPos; ) {
+					grp = grpList.GetNext(grpPos);
+					if (grp.CompareNoCase(psCondition->strPhrase) == 0)
+						return 1;
+				}
+				// No matches.
+				return 0;
+			}
+
 	case IN_WATCH_LIST_NODE:
 		return gpStore->GetWatchList ().MessageInMyThreads (psNG, pArtHdr);
 

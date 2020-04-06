@@ -278,6 +278,8 @@
 #define IDD_CHARACTER_CODING            402
 #define IDR_SPLASH_SMALL                407
 #define IDR_SPLASH_LARGE                408
+#define IDC_CROSSPOSTED_GROUP           409
+#define IDC_FIELD_GROUPNAME             410
 #define IDC_TREEVIEW                    1000
 #define IDS_COMBO_DEFFONT               1000
 #define IDC_NAME                        1000
@@ -2054,6 +2056,7 @@
 #define IDS_VERIFY_HDRS                 7607
 #define IDS_LOGGING_ON                  7608
 #define IDS_UTIL_RENUM                  7609
+#define IDS_CROSSGROUP                  7610
 #define IDS_APPLICATION_TITLE           8500
 #define IDS_SAVE_DECODED_AS             8501
 #define IDS_OVERWRITE_FILE              8502

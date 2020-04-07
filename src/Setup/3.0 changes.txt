@@ -5,12 +5,16 @@ Gravity Version 3.0 Stable Open Source Change Log
   [+] Upgraded : Gravity now builds with VS2019.
   [+] Added : Mouse scroll wheel now works in subscription dialog.
   [+] Added : New rule syntax "Cross-posted to alt.terrible.group".
-  [-] Fixed : Dialog titles could sometimes contain garbage.
+  [-] Fixed : Dialog titles could sometimes contain garbage or crash.
   [+] Upgraded: zlib 1.2.3 (from 2005) to 1.2.11 (from 2017).
   [+] Upgraded: pcre 4.4 (from 2003!) to 8.8 (from 2020).
   [+] Upgraded: hunspell 1.2.8 (from 2008) to 1.7.0 (from 2018).
   [+] Upgraded: libpng 1.2.8 (from 2004) to 1.6.37 (from 2019).
   [+] Upgraded: Updated the affix and dictionaries from libreoffice.
+  [+] Fixed : Spellchecker no longer uses HKLM to lookup dictionary
+      path, this doesn't make sense post-Vista. It now always uses
+      the folder that the Gravity executable is in.
+  [+] Upgraded: Installer now builds with WiX.
 
 3.0.4 STABLE Built + Released 12/9/2010
   [-] Fixed : Fixed error in 3.0.3 installer which made it impossible to

@@ -1,1 +1,1 @@
-src/Setup/3.0 changes.txt
+doc/3.0 changes.txt

@@ -8,6 +8,10 @@
 *.exp
 *.ilk
 *.lib
+*.udb
+*.msi
+*.wixobj
+*.wixpdb
 .nobackup
 NEWS_i.c
 NEWS_i.h

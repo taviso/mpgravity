@@ -5,6 +5,10 @@ AR=lib.exe
 MIDL=midl.exe
 MB=msbuild.exe
 MT=mt.exe
+CANDLE=candle.exe
+LIGHT=light.exe
+CANDLEFLAGS=-nologo
+LIGHTFLAGS=-nologo
 CPPFLAGS=/D NDEBUG /D WIN32
 RFLAGS=/nologo
 CFLAGS=/nologo $(CPPFLAGS) /Zi /O2 /guard:cf /FS /GA /GL /GF
@@ -23,6 +27,12 @@ MBFLAGS=/nologo /m                      \
 
 .PHONY: clean
 .DEFAULT_GOAL = all
+
+%.wixobj: %.wxs
+	$(CANDLE) $(CANDLEFLAGS) -out $@ $<
+
+%.msi: %.wixobj
+	$(LIGHT) $(LIGHTFLAGS) -out $@ $<
 
 %_i.h: %.odl
 	$(MIDL) $(MFLAGS) /h $@ $<
@@ -55,5 +65,7 @@ MBFLAGS=/nologo /m                      \
 	$(AR) $(LFLAGS) /OUT:$@ $^
 
 clean::
-	-cmd.exe /c del /q /f *.exp *.exe *.obj *.pdb *.ilk *.xml *.res *.ipdb *.iobj *.dll *.tmp
-	-cmd.exe /c del /q /f *.manifest *.lib *.tlb
+	-cmd.exe /c del /q /f *.exp *.exe *.obj *.pdb *.ilk *.xml *.res *.ipdb
+	-cmd.exe /c del /q /f *.iobj *.dll *.tmp *.manifest *.lib *.tlb *.wixobj
+	-cmd.exe /c del /q /f *.wixpdb *.msi
+

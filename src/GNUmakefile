@@ -1,4 +1,4 @@
-include GNUmakefile.common
+include ../GNUmakefile.common
 
 CPPFLAGS +=/I include /D MICROPLANET /D MP_PACKBYTE /D _USE_32BIT_TIME_T
 CPPFLAGS +=/D HUNSPELL_STATIC /D PCRE_STATIC
@@ -100,12 +100,12 @@ mpgravity.exe: $(Sources:.cpp=.obj) $(HelperClasses:.cpp=.obj)                 \
         $(GroupView:.cpp=.obj) $(ComposeDlg:.cpp=.obj) $(MainWindow:.cpp=.obj) \
         $(OptionsSetup:.cpp=.obj) $(Rules:.cpp=.obj) $(Binaries:.cpp=.obj)     \
         NEWS.res
-	make -C libwinface
-	make -C compface
-	make -C zlib
-	make -C pcre
-	make -C hunspell
-	make -C png
+	+make -C libwinface
+	+make -C compface
+	+make -C zlib
+	+make -C pcre
+	+make -C hunspell
+	+make -C png
 	$(CC) $(CFLAGS) $(LDFLAGS) /Fe:$@ $^ /link $(LINKFLAGS) $(LDLIBS:=.lib)
 	$(MT) $(MTFLAGS) -manifest $@.manifest -outputresource:"$@;1"
 

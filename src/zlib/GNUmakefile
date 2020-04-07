@@ -1,4 +1,4 @@
-include ../GNUmakefile.common
+include ../../GNUmakefile.common
 
 CPPFLAGS += /D _WINDOWS
 

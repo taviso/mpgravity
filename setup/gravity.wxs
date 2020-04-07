@@ -1,0 +1,80 @@
+<?xml version='1.0' encoding='windows-1252'?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+    <Product Name='MicroPlanet Gravity' Manufacturer='Microplanet + Volunteers'
+        Id='bc1f8b52-b7cc-4116-bbae-239ebeed5b15' 
+        UpgradeCode='3e55ed2f-268e-4c09-bda5-9a7f5583b7aa'
+        Language='1033' Codepage='1252' Version='3.0.5'>
+    <Package Id='*' Keywords='Installer' Description="MicroPlanet Gravity"
+        Comments='MicroPlanet Gravity USENET Newsreader' Manufacturer='Microplanet + Volunteers'
+        InstallerVersion='100' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
+
+    <Media Id='1' Cabinet='gravity.cab' EmbedCab='yes' DiskPrompt='Disk #1' />
+    <Property Id='DiskPrompt' Value="MicroPlanet Gravity Installation [1]" />
+
+    <Directory Id='TARGETDIR' Name='SourceDir'>
+    <Directory Id='ProgramFilesFolder' Name='PFiles'>
+        <Directory Id='INSTALLDIR' Name='MicroPlanet Gravity'>
+            <Component Id='MainExecutable'
+                Guid='14a8e440-c3bb-4784-aa5c-a25862cbe0ac'>
+                <File Id='GravityEXE'
+                    Name='Gravity.exe'
+                    Source='../src/mpgravity.exe'
+                    KeyPath='yes'>
+                    <Shortcut Id="StartMenuGravity"
+                        Directory="ProgramMenuDir"
+                        Name="MicroPlanet Gravity"
+                        WorkingDirectory='INSTALLDIR'
+                        Icon="Gravity.exe"
+                        IconIndex="0"
+                        Advertise="yes" />
+                </File>
+            </Component>
+
+            <Component Id='Manual'
+                Guid='632ea524-4bab-46a6-8ebe-ba9b09b8923d'>
+                <File Id='Manual'
+                    Name='gravity.chm'
+                    Source='gravity.chm'
+                    KeyPath='yes'>
+                    <Shortcut Id='StartMenuManual'
+                        Directory='ProgramMenuDir'
+                        Name='Gravity Manual'
+                        Advertise='yes' />
+                </File>
+            </Component>
+
+            <Component Id='AffixUS' Guid='aae4c354-2f69-426b-8955-261b35010bdf'>
+                <File Id='AffixUS' Name='en_US.aff' Source='en_US.aff' KeyPath='yes' />
+            </Component>
+            <Component Id='AffixGB' Guid='ba4033d8-d6a8-4740-8b24-7c3eab5f3e47'>
+                <File Id='AffixGB' Name='en_GB.aff' Source='en_GB.aff' KeyPath='yes' />
+            </Component>
+            <Component Id='DicUS' Guid='4a4a8250-7e05-438a-9f27-95f8212305fe'>
+                <File Id='DicUS' Name='en_US.dic' Source='en_US.dic' KeyPath='yes' />
+            </Component>
+            <Component Id='DicGB' Guid='b46fdcd2-26ab-4609-bb4d-9d90cc0d7aca'>
+                <File Id='DicGB' Name='en_GB.dic' Source='en_GB.dic' KeyPath='yes' />
+            </Component>
+        </Directory>
+    </Directory>
+    <Directory Id="ProgramMenuFolder" Name="Programs">
+        <Directory Id="ProgramMenuDir" Name="MicroPlanet Gravity">
+            <Component Id="ProgramMenuDir" Guid="29f6bbcf-76f7-4882-bb17-73744c2d183a">
+                <RemoveFolder Id='ProgramMenuDir' On='uninstall' />
+                <RegistryValue Root='HKCU' Key='Software\[Manufacturer]\[ProductName]' Type='string' Value='' KeyPath='yes' />
+            </Component>
+        </Directory>
+    </Directory>
+    </Directory>
+    <Feature Id='Complete' Level='1'>
+        <ComponentRef Id='MainExecutable' />
+        <ComponentRef Id='Manual' />
+        <ComponentRef Id='AffixUS' />
+        <ComponentRef Id='AffixGB' />
+        <ComponentRef Id='DicUS' />
+        <ComponentRef Id='DicGB' />
+        <ComponentRef Id='ProgramMenuDir' />
+    </Feature>
+    <Icon Id="Gravity.exe" SourceFile="../src/mpgravity.exe" />
+    </Product>
+</Wix>

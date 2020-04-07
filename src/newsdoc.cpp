@@ -889,16 +889,13 @@ int CNewsDoc::CheckSpelling_Word (const CString & testWord, std::list<std::strin
 		return 0;
 	if (NULL == m_pMS)
 	{
-		CString installDir;
-		GetInstallDir( installDir );
+		CString StartupDir = GetStartupDir();
 
 		CString dict = gpGlobalOptions->GetRegSystem()->GetSpellingDictionary();
 		CString aff  = gpGlobalOptions->GetRegSystem()->GetSpellingAffinity();
 
-		TPath   p0(installDir, "spell");
-
-		TPath df(p0, dict);  // combine directory + filename
-		TPath af(p0, aff);
+		TPath df(StartupDir, dict);  // combine directory + filename
+		TPath af(StartupDir, aff);
 
 		m_pMS = new Hunspell ( af, df );
 //		m_pMS = new MySpell ( af, df );

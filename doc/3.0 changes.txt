@@ -1,7 +1,12 @@
 Gravity Version 3.0 Stable Open Source Change Log
 =========================================================================
 
-3.0.5
+3.0.6
+  [+] Changed : Disable the splashscreen by default.
+  [+] Changed : Use startup directory to find help file, which makes
+      portable installation easier.
+
+3.0.5 Released 07/04/2020
   [+] Upgraded : Gravity now builds with VS2019.
   [+] Added : Mouse scroll wheel now works in subscription dialog.
   [+] Added : New rule syntax "Cross-posted to alt.terrible.group".

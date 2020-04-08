@@ -73,7 +73,7 @@ TNewsCommandLineInfo::TNewsCommandLineInfo ()
 	: m_bLogStartup(FALSE)
 	, m_bSafeStart(FALSE)
 {
-	m_bNewsURL = m_bVCRFile = m_bGSXFile = false;
+	m_bShowSplash = m_bNewsURL = m_bVCRFile = m_bGSXFile = false;
 }
 
 // --------------------------------------------------------------------------

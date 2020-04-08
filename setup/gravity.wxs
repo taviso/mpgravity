@@ -3,7 +3,7 @@
     <Product Name='Gravity 3.0' Manufacturer='Microplanet'
         Id='bc1f8b52-b7cc-4116-bbae-239ebeed5b15' 
         UpgradeCode='3e55ed2f-268e-4c09-bda5-9a7f5583b7aa'
-        Language='1033' Codepage='1252' Version='3.0.5'>
+        Language='1033' Codepage='1252' Version='3.0.6'>
     <Package Id='*' Keywords='Installer' Description="MicroPlanet Gravity"
         Comments='MicroPlanet Gravity USENET Newsreader' Manufacturer='Microplanet + Volunteers'
         InstallerVersion='100' Languages='1033' Compressed='yes' SummaryCodepage='1252' />

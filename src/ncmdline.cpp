@@ -88,8 +88,8 @@ TNewsCommandLineInfo::ParseParam (LPCTSTR lpszParam, BOOL fFlag,
 
 	if (fFlag)
 	{
-		if (0 == _tcsicmp(lpszParam, _T("nologo")))
-			m_bShowSplash = FALSE;
+		if (0 == _tcsicmp(lpszParam, _T("logo")))
+			m_bShowSplash = TRUE;
 		else if (0 == _tcsicmp(lpszParam, _T("log")))
 			m_bLogStartup = TRUE;
 		else if (0 == _tcsicmp(lpszParam, _T("safestart")))

@@ -361,7 +361,7 @@ ANALIB gGravityVersion;
 CNewsApp::CNewsApp()
 {
 	free((void *)m_pszHelpFilePath);
-	m_pszHelpFilePath = _tcsdup(_T("gravity.chm"));
+	m_pszHelpFilePath = _tcsdup(_T(GetStartupDir() + "gravity.chm"));
 	EnableHtmlHelp();
 
 	m_fCreateStore = FALSE;
@@ -804,7 +804,7 @@ BOOL CNewsApp::InitInstance()
 	gfSafeStart = sCmdLineInfo.m_bSafeStart;
 	gfLogToFile = BYTE(sCmdLineInfo.m_bLogStartup);
 
-	// The -nologo flag turns off the splash screen
+	// The -logo flag turns on the splash screen
 	if (sCmdLineInfo.m_bShowSplash)
 	{
 		CString strMRUServer;

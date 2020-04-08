@@ -66,4 +66,4 @@ I'll also consider implementing feature requests.
 
 # Security
 
-I will fix any security bugs you report.
+I will fix any security bugs you report, you can either create an issue or email me at <taviso@gmail.com>.

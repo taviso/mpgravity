@@ -88,6 +88,7 @@ enum ESeverity {kInfo, kWarning, kError, kFatal};
 // kClassSMTP     - SMTP error code
 // kClassWinsock  - line dropped, couldn't connect etc.
 // kClassUser     - group suddenly unsubscribed
+// kClassSecurity - SSL security error
 
 enum EErrorClass
 {
@@ -99,7 +100,8 @@ enum EErrorClass
 	kClassNNTP,
 	kClassSMTP,
 	kClassWinsock,
-	kClassUser
+	kClassUser,
+	kClassSecurity
 };
 
 /////////////////////////////////////////////////////////////////////////////

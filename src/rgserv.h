@@ -90,6 +90,9 @@ public:
    LONG GetNewsServerPort () {return m_newsServerPort;}
    void SetNewsServerPort (LONG port) {m_newsServerPort = port;}
 
+   BOOL GetConnectSecurely() { return m_fConnectSecurely; }
+   void SetConnectSecurely(BOOL fEnabled) { m_fConnectSecurely = fEnabled;}
+
    const CString & GetSmtpServer () {return m_smtpServer;}
    void  SetSmtpServer (LPCTSTR smtpServer) {m_smtpServer = smtpServer;}
 
@@ -298,6 +301,7 @@ protected:
    CString m_serverDatabasePath;    // path to the server database files
    CString m_newsServerAddr;        // address for NNTP server
    LONG    m_newsServerPort;        // port for news server
+   BOOL    m_fConnectSecurely;      // Optionally connect with SSL
    CString m_smtpServer;            // host address for SMTP mail
    LONG    m_smtpServerPort;        // port for SMTP server
    CString m_fullName;              // ex: John Q. Public

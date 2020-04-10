@@ -683,7 +683,8 @@ TPump::TPump(LPVOID  pParam)
 	m_pFeeed  = new TNewsFeed ( cpNewsServer->GetNewsServerPort (),
 		m_fEmergencyPump ? EmergencyPumpBlockingHook : NormalPumpBlockingHook,
 		m_KillRequest,
-		&m_fProcessJobs );
+		&m_fProcessJobs,
+		cpNewsServer->GetConnectSecurely());
 
 	if ( gpGlobalOptions->GetRegSwitch()->GetLogGroupCmds  ()  )
 	{

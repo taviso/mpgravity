@@ -89,6 +89,8 @@ TServersPage::TServersPage() : CPropertyPage(TServersPage::IDD)
 	m_authPass_STP = _T("");
 	m_iPortNNTP = 119;
 	m_iPortSMTP = 25;
+
+	m_fConnectSecurely = FALSE;
 }
 
 TServersPage::~TServersPage()
@@ -119,6 +121,8 @@ void TServersPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_CONNECT_ADVANCED_NNTP2, m_iPortNNTP);
 	DDV_MinMaxInt(pDX, m_iPortNNTP, 0, 65535);
 
+	DDX_Check(pDX, IDC_SERVER_TLS, m_fConnectSecurely);
+
 	DDX_Text(pDX, IDC_CONNECT_ADVANCED_SMTP2, m_iPortSMTP);
 	DDV_MinMaxInt(pDX, m_iPortSMTP, 0, 65535);
 
@@ -138,6 +142,7 @@ BEGIN_MESSAGE_MAP(TServersPage, CPropertyPage)
 	ON_BN_CLICKED(IDC_OPTSERVER_RBT_NOPWD, OnOptserverRbtNopwd)
 	ON_BN_CLICKED(IDC_OPTSERVER_RBT_LOGONW, OnOptserverRbtLogonw)
 	ON_BN_CLICKED(IDC_OPTSERVER_RBT_SPA, OnOptserverRbtSpa)
+	ON_BN_CLICKED(IDC_SERVER_TLS, OnServerTls)
 	ON_EN_CHANGE(IDC_CONNECTION_HOST, &TServersPage::OnEnChangeUpdateButtons)
 	ON_EN_CHANGE(IDC_NNTPSERVER_ADDRESS, &TServersPage::OnEnChangeUpdateButtons)
 	ON_EN_CHANGE(IDC_CONNECT_AUTHNAME, &TServersPage::OnEnChangeUpdateNNTPAuth)
@@ -227,6 +232,21 @@ void TServersPage::OnOptserverRbtSpa()
 {
 	EnableAccountName(FALSE);
 	OnEnChangeUpdateButtons();
+}
+
+void TServersPage::OnServerTls()
+{
+	UpdateData();
+
+	// If the default port was set, update it.
+	if (m_fConnectSecurely && m_iPortNNTP == 119) {
+		m_iPortNNTP = 563;
+	}
+	if (!m_fConnectSecurely && m_iPortNNTP == 563) {
+		m_iPortNNTP = 119;
+	}
+
+	UpdateData(FALSE);
 }
 
 /////////////////////////////////////////////////////////////////////////////

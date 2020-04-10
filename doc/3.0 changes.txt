@@ -2,6 +2,8 @@ Gravity Version 3.0 Stable Open Source Change Log
 =========================================================================
 
 3.0.6
+  [+] Added : Experimental support for NNTPS, you can select
+      "Connect Securely" in the server dialog.
   [+] Changed : Disable the splashscreen by default.
   [+] Changed : Use startup directory to find help file, which makes
       portable installation easier.

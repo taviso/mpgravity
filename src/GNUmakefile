@@ -2,7 +2,7 @@ include ../GNUmakefile.common
 
 CPPFLAGS +=/I include /D MICROPLANET /D MP_PACKBYTE /D _USE_32BIT_TIME_T
 CPPFLAGS +=/D HUNSPELL_STATIC /D PCRE_STATIC
-LDLIBS   +=comctl32 winmm version winface compface zlib pcre hunspell png
+LDLIBS   +=comctl32 winmm version winface compface zlib pcre hunspell png crypt32 secur32
 LINKFLAGS+=/LIBPATH:libwinface /LIBPATH:compface /LIBPATH:zlib /LIBPATH:pcre
 LINKFLAGS+=/LIBPATH:hunspell /LIBPATH:png
 
@@ -53,7 +53,7 @@ Sources=advmhdr.cpp advphdr.cpp artact.cpp artbank.cpp artclean.cpp            \
         urlsppt.cpp usrdisp.cpp utilerr.cpp utilpump.cpp utilrout.cpp          \
         utilsize.cpp utilstr.cpp vcrdlg.cpp vcrrun.cpp veraddr.cpp vfiltad.cpp \
         vfilter.cpp vfltdlg.cpp vlist.cpp vlrare.cpp vlscroll.cpp vlsetcur.cpp \
-        warndlg.cpp wndstat.cpp
+        warndlg.cpp wndstat.cpp sockssl.obj
 
 HelperClasses=8859x.cpp bits.cpp boyerc.cpp bucket.cpp comlbx.cpp critsect.cpp \
         dbutil.cpp dirpick.cpp dllver.cpp fileutil.cpp gdiutil.cpp genutil.cpp \

@@ -144,6 +144,8 @@ void CNewsApp::OnServerOptions()
    pgSetup.m_iPortSMTP      = cpNewsServer->GetSmtpServerPort ();
    pgSetup.m_iPortNNTP      = cpNewsServer->GetNewsServerPort ();
 
+   pgSetup.m_fConnectSecurely = cpNewsServer->GetConnectSecurely();
+
    // connections page
    pgConnection.m_fConnectAtStartup = cpNewsServer->GetConnectAtStartup();
    pgConnection.m_fKeepAlive = cpNewsServer->GetSendKeepAliveMsgs();
@@ -259,6 +261,8 @@ void CNewsApp::OnServerOptions()
 
       cpNewsServer->SetSmtpServerPort (pgSetup.m_iPortSMTP);
       cpNewsServer->SetNewsServerPort (pgSetup.m_iPortNNTP);
+
+      cpNewsServer->SetConnectSecurely(pgSetup.m_fConnectSecurely);
 
       cpNewsServer->SetConnectAtStartup (pgConnection.m_fConnectAtStartup);
       cpNewsServer->SetSendKeepAliveMsgs(pgConnection.m_fKeepAlive);

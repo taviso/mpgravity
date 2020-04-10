@@ -73,7 +73,7 @@ public:
 
 	enum { IDD = IDD_OPTIONS_SERVERS };
 	CString  m_newsServer;
-	CString	m_strNNTPAddress;
+	CString  m_strNNTPAddress;
 	int      m_iLogonStyle_NTP;
 	CString  m_authName_NTP;
 	CString  m_authPass_NTP;
@@ -86,6 +86,8 @@ public:
 	int      m_iPortNNTP;
 	int      m_iPortSMTP;
 
+	BOOL     m_fConnectSecurely;
+
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	void TServersPage::EnableAccountName (BOOL fEnable);
@@ -95,6 +97,7 @@ protected:
 	afx_msg void OnOptserverRbtNopwd();
 	afx_msg void OnOptserverRbtLogonw();
 	afx_msg void OnOptserverRbtSpa();
+	afx_msg void OnServerTls();
 	afx_msg BOOL OnHelpInfo(HELPINFO* pHelpInfo);
 	afx_msg void OnPSNHelp (NMHDR *pNotifyStruct, LRESULT *result);
 	DECLARE_MESSAGE_MAP()

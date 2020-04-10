@@ -116,7 +116,7 @@ class TMemorySpot;
 class TNewsFeed {
 public:
    TNewsFeed(int portNumber, FARPROC pBlockingHook, HANDLE hStopEvent,
-               bool * pfProcessJobs);
+               bool * pfProcessJobs, bool bSecure);
 
    ~TNewsFeed(void);
 

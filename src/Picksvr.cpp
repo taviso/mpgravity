@@ -460,6 +460,7 @@ TNewsServer * fnCreateServer (TSetupPage & dlgHuman, TServersPage & dlgServer)
 		pServer->SetAccountName (dlgServer.m_authName_NTP);
 		pServer->SetAccountPassword (dlgServer.m_authPass_NTP);
 		pServer->SetNewsServerPort (dlgServer.m_iPortNNTP);
+		pServer->SetConnectSecurely(dlgServer.m_fConnectSecurely);
 		pServer->SetSmtpServerPort (dlgServer.m_iPortSMTP);
 		pServer->SetEmailAddressForPost (dlgHuman.m_strMailOverride);
 

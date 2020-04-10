@@ -89,6 +89,7 @@ public:
 public:
    CString m_newsServer;            // host name or IP address
    LONG    m_newsServerPort;        // port for news server
+   BOOL    m_fConnectSecurely;      // Optionally connect via SSL
    CString m_smtpServer;            // host address for SMTP mail
    LONG    m_smtpServerPort;        // port for SMTP server
    CString m_fullName;              // ex: John Q. Public

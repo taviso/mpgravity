@@ -1658,6 +1658,7 @@
 #define IDC_CORRECT_AND_ADD             1781
 #define IDC_STATIC_LINE1                1781
 #define IDC_STATIC_LINE2                1782
+#define IDC_SERVER_TLS                  1784
 #define IDS_MPSOCKERR_GETHOSTBYNAME     2000
 #define IDS_MPSOCKERR_CREATESOCKET      2001
 #define IDS_MPSOCKERR_CONNECT           2002

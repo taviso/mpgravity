@@ -182,6 +182,8 @@ TDirectSocket::TDirectSocket(FARPROC pBlockingHook, HANDLE hStopEvent,
 	m_bSendRecvError = false;
 	m_PortNumber = 0xFF000;
 	m_pTrack = 0;
+	m_bSecure = FALSE;
+	m_SecurityLayer = NULL;
 
 	int iMaxSize = 8192 * 2;
 
@@ -382,6 +384,17 @@ int  TDirectSocket::Connect(TErrorList * pErrList, LPCTSTR hostAddress)
 		BOOL fKeepAlive = TRUE;
 		VERIFY (setsockopt(m_DataSocket, SOL_SOCKET, SO_KEEPALIVE,
 			(const char*) &fKeepAlive, sizeof BOOL) == 0);
+
+		if (m_bSecure) {
+			m_SecurityLayer = AddSecurityLayer(hostAddress, m_DataSocket);
+			if (!m_SecurityLayer) {
+
+				// FIXME: Try to push some descriptive error about the certificate.
+				TError sSecErr("Security Error Connecting", kError, kClassSecurity);
+				pErrList->PushError(sSecErr);
+				iRet = MPSOCK_ERR_SECURITY;
+			}
+		}
 	}
 
 	return iRet;
@@ -510,6 +523,12 @@ void TDirectSocket::CancelBlockingCall(void)
 //////////////////////////////////////////////////////////////////////////
 void TDirectSocket::free_socket ()
 {
+	// If this was a secure socket, send close notification.
+	RemoveSecureLayer(m_SecurityLayer, m_DataSocket);
+
+	// Layer can no longer be used.
+	m_SecurityLayer = NULL;
+
 	if (INVALID_SOCKET != m_DataSocket)
 	{
 		if (SOCKET_ERROR == closesocket(m_DataSocket))
@@ -683,7 +702,11 @@ int   TDirectSocket::Write(TErrorList * pErrList, LPCSTR buf, int nBytesToWrite)
 		else
 			nToWrite = nBytesLeft;
 
-		nWritten = send (m_DataSocket, buf, nToWrite, 0);
+		if (m_bSecure) {
+			nWritten = SecureSend(m_SecurityLayer, m_DataSocket, (PVOID) buf, nToWrite);
+		} else {
+			nWritten = send (m_DataSocket, buf, nToWrite, 0);
+		}
 
 		if (SOCKET_ERROR == nWritten)
 			return send_error (pErrList, WSAGetLastError ());
@@ -804,10 +827,16 @@ int TDirectSocket::myReadChar_EL ()
 // Returns 0 for success
 int TDirectSocket::fill_buffer_EL ()
 {
+	int ret;
 	char buf[16384];
-
 	ULONG uSockCount = 0;
-	int ret = ioctlsocket(m_DataSocket, FIONREAD, &uSockCount);
+
+	if (m_bSecure) {
+		ret = SockAvailable(m_SecurityLayer, m_DataSocket, &uSockCount);
+	} else {
+		ret = ioctlsocket(m_DataSocket, FIONREAD, &uSockCount);
+	}
+
 	if (SOCKET_ERROR == ret)
 	{
 		DWORD dwError = WSAGetLastError ();
@@ -831,7 +860,11 @@ int TDirectSocket::fill_buffer_EL ()
 		uSockCount = min(uSockCount, sizeof(buf));
 
 		// read
-		ret = recv (m_DataSocket, buf, uSockCount, 0);
+		if (m_bSecure) {
+			ret = SecureRecv(m_SecurityLayer, m_DataSocket, buf, uSockCount);
+		} else {
+			ret = recv (m_DataSocket, buf, uSockCount, 0);
+		}
 		if (SOCKET_ERROR == ret || 0 == ret)
 		{
 			return recv_error (m_psErrList, ret, WSAGetLastError () );
@@ -905,7 +938,8 @@ int TDirectSocket::GetLocalIPAddress(CString & strIPAddress)
 // Very, very specific function
 int  TDirectSocket::AsyncQuit (TErrorList * pErrList)
 {
-	int    ret = 1;
+	int ret = 1;
+	int r;
 
 	if (INVALID_SOCKET == m_DataSocket)
 		return 1;
@@ -915,14 +949,19 @@ int  TDirectSocket::AsyncQuit (TErrorList * pErrList)
 
 	ULONG mode = 1;
 
-	// switch to non-blocking mode
 
-	int r = ioctlsocket ( m_DataSocket, FIONBIO, &mode );
+	if (m_bSecure) {
+		// I dunno if this will really work async?
+		r = SecureSend(m_SecurityLayer, m_DataSocket, "QUIT\r\n", 6);
+	} else {
+		// switch to non-blocking mode
+		r = ioctlsocket ( m_DataSocket, FIONBIO, &mode );
 
-	if (SOCKET_ERROR == r)
-		return 1;
+		if (SOCKET_ERROR == r)
+			return 1;
 
-	r = send ( m_DataSocket, "QUIT\r\n", 6, 0);
+		r = send ( m_DataSocket, "QUIT\r\n", 6, 0);
+	}
 
 	if (6 == r)
 	{
@@ -935,15 +974,18 @@ int  TDirectSocket::AsyncQuit (TErrorList * pErrList)
 
 			// do a non-blocking read to suck up the '205 connection closed
 
-			r = recv ( m_DataSocket, rcLine,  1024, 0 );
+			if (m_bSecure) {
+				r = SecureRecv(m_SecurityLayer, m_DataSocket, rcLine, 1024);
+			} else {
+				r = recv ( m_DataSocket, rcLine,  1024, 0 );
+				// back to blocking
+
+				mode = 0;
+				ioctlsocket ( m_DataSocket, FIONBIO, &mode );
+			}
 			//TRACE1("%s\n", rcLine);
 		}
 	}
-
-	// back to blocking
-
-	mode = 0;
-	ioctlsocket ( m_DataSocket, FIONBIO, &mode );
 
 	return ret;
 }
@@ -951,10 +993,11 @@ int  TDirectSocket::AsyncQuit (TErrorList * pErrList)
 ////////////////////////////////////////////////////////
 
 TNewsSocket::TNewsSocket(int port, FARPROC pBlockingHook, HANDLE hEvent,
-						 bool * pfProcessJobs)
+						 bool * pfProcessJobs, bool bSecure)
 						 : TDirectSocket(pBlockingHook, hEvent, pfProcessJobs)
 {
 	m_PortNumber = port;
+	m_bSecure = bSecure;
 }
 
 TNewsSocket::~TNewsSocket(void)

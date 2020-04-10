@@ -112,12 +112,13 @@ const int TUserDisplay_Frequency = 5;
 static char szNone[] = "(none)";
 
 TNewsFeed::TNewsFeed(int portNumber, FARPROC pBlockingHook, HANDLE hStopEvent,
-					 bool * pfProcessJobs )
+					 bool * pfProcessJobs, bool bSecure)
 {
 	m_pSocket = new TNewsSocket (portNumber,
 		pBlockingHook,
 		hStopEvent,
-		pfProcessJobs);
+		pfProcessJobs,
+		bSecure);
 
 	m_fValid = m_pSocket ? true : false;
 }

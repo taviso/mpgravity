@@ -50,6 +50,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "mpsokerr.h"
 #include "superstl.h"
+#include "sockssl.h"
 
 class TMemorySpot;
 class TSockTrack;
@@ -86,6 +87,9 @@ public:
    virtual void   SetPort (int port) {m_PortNumber = port;}
    virtual int    GetPort () {return m_PortNumber;}
 
+   virtual void SetSecure (bool fEnable) { m_bSecure = fEnable; }
+   virtual bool GetSecure () { return m_bSecure; }
+
    int    GetLocalIPAddress(CString & strIPAddress);
 
    // returns true if there was any communication failure
@@ -108,6 +112,9 @@ protected:
    vector<TCHAR> m_vDataBuffer;
 	vector<TCHAR>::iterator it;
    BOOL     m_bAborted;
+   BOOL     m_bSecure;
+
+   PSEC_LAYER m_SecurityLayer;
 
    // if we encounter a send or recv error, then we shouldn't send QUIT
    bool     m_bSendRecvError;
@@ -142,7 +149,7 @@ private:
 class TNewsSocket : public TDirectSocket {
 public:
    TNewsSocket(int port, FARPROC pBlockingHook, HANDLE hStopEvent,
-                  bool * pfProcessJobs);
+                  bool * pfProcessJobs, bool bSecure);
 
    ~TNewsSocket(void);
 

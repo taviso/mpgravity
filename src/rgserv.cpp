@@ -80,7 +80,7 @@ TRegServer::TRegServer()
 : m_NewsGroup_Check(1972, 1, 1, 0, 0, 0)
 {
 	default_values();
-	m_itemCount = 59;
+	m_itemCount = 60;
 
 	m_pTable = new TableItem[m_itemCount];
 	SetItem(m_pTable + 0, "DatabasePath",   kREGString, &m_serverDatabasePath);
@@ -144,7 +144,9 @@ TRegServer::TRegServer()
 	SetItem(m_pTable +57, "MailLogonUser",        kREGString, &m_strSmtpLogonUser, TRUE);
 	SetItem(m_pTable +58, "MailLogonPswd",        kREGString, &m_passwordBuffer2, TRUE);
 
-	ASSERT(59 == m_itemCount);
+	SetItem(m_pTable +59, "ConnectSecurely", kREGBool, &m_fConnectSecurely);
+
+	ASSERT(60 == m_itemCount);
 }
 
 // ------------------------------------------------------------------------
@@ -258,6 +260,7 @@ void TRegServer::write()
 void TRegServer::default_values()
 {
 	m_newsServerPort           = 119;
+	m_fConnectSecurely         = FALSE;
 	m_smtpServerPort           = 25;
 	m_kGroupSchedule           = TGlobalDef::kGroupsOnDemand;
 	m_fDisplayIncomingGroups   = FALSE;
@@ -440,6 +443,13 @@ void TRegServer::upgrade()
 		make_cipher_text (strPass, strCipher);
 		if (0 == rgWriteString ("NewsPswd", strCipher))
 			RegDeleteValue (m_hkKey, "NewsPwd");
+	}
+
+	BOOL fSecure;
+
+	if (ERROR_SUCCESS != rgReadBool ("ConnectSecurely", sPtr.get(), iBufSz, fSecure))
+	{
+		rgWriteNum ("ConnectSecurely", FALSE);
 	}
 }
 

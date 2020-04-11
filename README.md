@@ -14,6 +14,11 @@ with GNU make and WiX my preferred build and install systems.
 
 https://sourceforge.net/projects/mpgravity/
 
+# Installer
+
+Just want an installer? [Click Here!](https://github.com/taviso/mpgravity/releases)
+
+
 # Build Instructions
 
 I use GNU make, you can install it from [here](http://gnuwin32.sourceforge.net/packages/make.htm).
@@ -38,7 +43,15 @@ Visual Studio.
 
 
 ```
-3.0.5
+
+3.0.6 UNRELEASED
+  [+] Added : Experimental support for NNTPS, you can select
+      "Connect Securely" in the server dialog.
+  [+] Changed : Disable the splashscreen by default.
+  [+] Changed : Use startup directory to find help file, which makes
+      portable installation easier.
+
+3.0.5 Released 07/04/2020
   [+] Upgraded : Gravity now builds with VS2019.
   [+] Added : Mouse scroll wheel now works in subscription dialog.
   [+] Added : New rule syntax "Cross-posted to alt.terrible.group".

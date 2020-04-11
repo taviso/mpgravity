@@ -1,8 +1,8 @@
 #ifndef SECURITY_WIN32
 # define SECURITY_WIN32
 #endif
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <windows.h>
 #include <winsock.h>
 #include <wincrypt.h>
@@ -10,24 +10,67 @@
 #include <schannel.h>
 #include <security.h>
 #include <sspi.h>
-
-#undef NDEBUG
 #include <assert.h>
 
 #include "sockssl.h"
 
-#define IO_BUFFER_SIZE 0x10000
+// Best guess about how much data will be read for a handshake
+// doesn't matter if it's wrong.
+#define INIT_IO_BUFSIZE (1 << 12)
+
+#if !defined(NDEBUG) && !defined(TRACE)
+# include <stdio.h>
+// You can only use TRACE() from C++, here is a quick replacement for C. Could
+// use OutputDebugString() or RPT() instead, but it doesn't really bother me.
+// Note that in debug builds you need to AllocConsole() and then freopen()
+// stdout to see printf() output.
+# define TRACE(msg, ...) do {       \
+    printf("%s:", __func__);        \
+    printf(msg, __VA_ARGS__);       \
+    printf("\n");                   \
+    fflush(stdout);                 \
+  } while (false)
+# define AfxDebugBreak __debugbreak
+#else
+# define TRACE(msg, ...)
+# define AfxDebugBreak()
+#endif // !NDEBUG
+
+#if defined(TEST_EINTR)
+static INT sendfault(SOCKET socket, PVOID buf, DWORD len, DWORD flags)
+{
+    static i;
+    if (i++ & 1 && i > 1) {
+        WSASetLastError(WSAEINTR);
+        return SOCKET_ERROR;
+    }
+    return send(socket, buf, len, flags);
+}
+static INT recvfault(SOCKET socket, PVOID buf, DWORD len, DWORD flags)
+{
+    static i;
+    if (i++ & 1 && i > 2) {
+        WSASetLastError(WSAEINTR);
+        return SOCKET_ERROR;
+    }
+    return recv(socket, buf, len, flags);
+}
+# define send sendfault
+# define recv recvfault
+#endif // TEST_EINTR
 
 typedef struct _SEC_LAYER {
+    HANDLE Heap;
     CredHandle Credentials;
     CtxtHandle Context;
-    HANDLE Heap;
-    DWORD RecvOffset;
+    SecPkgContext_StreamSizes StreamSizes;
+    // Receive Buffers
     SecBuffer CipherCache;
     SecBuffer PlainCache;
-    SecPkgContext_StreamSizes StreamSizes;
+    // Send Buffer
+    SecBuffer SendCache;
     // Dont need to save WSAError, because the system does.
-    DWORD LastSecError;
+    DWORD LastError;
 } SEC_LAYER, *PSEC_LAYER;
 
 // I dunno if these are all necessary.
@@ -38,10 +81,86 @@ static const kSSPIFlags = ISC_REQ_SEQUENCE_DETECT
                         | ISC_REQ_ALLOCATE_MEMORY
                         | ISC_REQ_STREAM;
 
-static LONG DisconnectFromServer(SOCKET Socket, PCredHandle phCreds, CtxtHandle * phContext)
+// This send() wrapper handles WSAEINTR by accepting and caching all data
+// sent. If you call with Len == 0, any existing data is sent, this way
+// you can check if it's safe to EncryptMessage() before committing to
+// completing the operation.
+//
+// Q. Why not just loop until send() accepts it?
+// A. Gravity uses this technique to stay responsive during long blocking
+//    operations, so if we don't return after an EINTR, the GUI will freeze.
+static INT SafeSend(PSEC_LAYER SecLayer, SOCKET Socket, PVOID Buf, DWORD Len)
 {
-    PBYTE pbMessage;
-    DWORD dwType, dwSSPIOutFlags, cbMessage, cbData, Status;
+    INT Result;
+    DWORD CurrSize;
+    PBYTE CurrAddr;
+
+    TRACE("%u cached bytes", SecLayer->SendCache.cbBuffer);
+
+    CurrSize = SecLayer->SendCache.cbBuffer;
+    CurrAddr = SecLayer->SendCache.pvBuffer;
+
+    // Caller just wants to clear buffer, we can return now if we
+    // have no data to send.
+    if (Len == 0 && CurrSize == 0) {
+        return 0;
+    }
+
+    // Add all of this new data to our send buffer.
+    SecLayer->SendCache.cbBuffer += Len;
+    SecLayer->SendCache.pvBuffer = HeapReAlloc(SecLayer->Heap,
+                                               HEAP_ZERO_MEMORY,
+                                               CurrAddr,
+                                               SecLayer->SendCache.cbBuffer);
+
+    // Pointer to end of current buffer.
+    CurrAddr = SecLayer->SendCache.pvBuffer;
+    CurrAddr += CurrSize;
+
+    CopyMemory(CurrAddr, Buf, Len);
+
+    // Try to send some of the data we have.
+    Result = send(Socket,
+                  SecLayer->SendCache.pvBuffer,
+                  SecLayer->SendCache.cbBuffer,
+                  0);
+
+    TRACE("send() returns %d", Result);
+
+    if (Result == SOCKET_ERROR) {
+        // Gravity called WSACancelBlockingCall() while we were blocked on
+        // send(), we just swallow the error and pretend it worked, then
+        // will try again next time.
+        if (WSAGetLastError() == WSAEINTR) {
+            TRACE("send interrupted, %d bytes saved in cache", Len);
+            return Len ? Len : SOCKET_ERROR;
+        } else {
+            TRACE("send WinSock error was %#x", WSAGetLastError());
+            // Our only option is to discard the data in the cache, this will
+            // require some renegotiation by schannel.
+            SecLayer->SendCache.cbBuffer = 0;
+            return SOCKET_ERROR;
+        }
+    }
+
+    // We got rid of some data, fixup the cache.
+    SecLayer->SendCache.cbBuffer -= Result;
+
+    MoveMemory(SecLayer->SendCache.pvBuffer,
+       (PBYTE) SecLayer->SendCache.pvBuffer + Result,
+               SecLayer->SendCache.cbBuffer);
+
+    TRACE("send cache now contains %u", SecLayer->SendCache.cbBuffer);
+
+    // Note that we always claim we sent everything requested.
+    return Len;
+}
+
+static INT DisconnectFromServer(PSEC_LAYER SecLayer, SOCKET Socket)
+{
+    INT Result;
+    DWORD dwSSPIOutFlags;
+    DWORD dwType = SCHANNEL_SHUTDOWN;
     SecBuffer OutBuffers[] = {
         {
             .pvBuffer   = &dwType,
@@ -56,11 +175,11 @@ static LONG DisconnectFromServer(SOCKET Socket, PCredHandle phCreds, CtxtHandle 
     };
 
     // Notify schannel that we are about to close the connection.
-    dwType = SCHANNEL_SHUTDOWN;
+    SecLayer->LastError = ApplyControlToken(&SecLayer->Context, &OutBuffer);
 
-    if (ApplyControlToken(phContext, &OutBuffer) != SEC_E_OK) {
-        printf("ApplyControlToken Failed\n");
-        goto cleanup;
+    if (SecLayer->LastError != SEC_E_OK) {
+        TRACE("ApplyControlToken() => %#x", SecLayer->LastError);
+        return -1;
     }
 
     // Build an SSL close notify message.
@@ -68,100 +187,115 @@ static LONG DisconnectFromServer(SOCKET Socket, PCredHandle phCreds, CtxtHandle 
     OutBuffers[0].BufferType = SECBUFFER_TOKEN;
     OutBuffers[0].cbBuffer   = 0;
 
-    Status = InitializeSecurityContextA(phCreds,
-                                        phContext,
-                                        NULL,
-                                        kSSPIFlags,
-                                        0,
-                                        0,
-                                        NULL,
-                                        0,
-                                        phContext,
-                                        &OutBuffer,
-                                        &dwSSPIOutFlags,
-                                        NULL);
+    SecLayer->LastError = InitializeSecurityContext(&SecLayer->Credentials,
+                                                    &SecLayer->Context,
+                                                    NULL,
+                                                    kSSPIFlags,
+                                                    0,
+                                                    0,
+                                                    NULL,
+                                                    0,
+                                                    &SecLayer->Context,
+                                                    &OutBuffer,
+                                                    &dwSSPIOutFlags,
+                                                    NULL);
 
-    if (FAILED(Status)) {
-        printf("**** Error 0x%x returned by InitializeSecurityContext\n", Status);
-        goto cleanup;
+    if (SecLayer->LastError != SEC_E_OK) {
+        TRACE("InitializeSecurityContext() => %#x", SecLayer->LastError);
+        return -1;
     }
 
-    pbMessage = OutBuffers[0].pvBuffer;
-    cbMessage = OutBuffers[0].cbBuffer;
+    TRACE("close notify is %d bytes", OutBuffers[0].cbBuffer);
 
     // Send the close notify message to the server.
-    if (pbMessage != NULL && cbMessage != 0) {
-        // XXX NEED TO HANDLE EINTR
-        cbData = send(Socket, pbMessage, cbMessage, 0);
-        if(cbData == SOCKET_ERROR || cbData == 0)
-        {
-            Status = WSAGetLastError();
-                        printf("**** Error %d sending close notify\n", Status);
-            goto cleanup;
-        }
-        printf("Sending Close Notify\n");
-        printf("%d bytes of handshake data sent\n", cbData);
-        FreeContextBuffer(pbMessage);
+    Result = SafeSend(SecLayer,
+                      Socket,
+                      OutBuffers[0].pvBuffer,
+                      OutBuffers[0].cbBuffer);
+
+    TRACE("send returned %d", Result);
+
+    FreeContextBuffer(OutBuffers[0].pvBuffer);
+
+    if (Result == SOCKET_ERROR) {
+        TRACE("failed to send close notify, %#x", WSAGetLastError());
+        return -1;
     }
 
-cleanup:
-    DeleteSecurityContext(phContext);
-
-    return Status;
+    return 0;
 }
 
 
-static SECURITY_STATUS ClientHandshakeLoop(PSEC_LAYER      SecLayer,
-                                           SOCKET          Socket,
-                                           PCredHandle     phCreds,
-                                           CtxtHandle *    phContext,
-                                           BOOL            fDoInitialRead,
-                                           SecBuffer *     pExtraData)
+static SECURITY_STATUS ClientHandshakeLoop(PSEC_LAYER SecLayer,
+                                           SOCKET Socket,
+                                           PCredHandle phCreds,
+                                           CtxtHandle * phContext,
+                                           BOOL fDoInitialRead)
 {
-    SecBufferDesc   OutBuffer, InBuffer;
-    SecBuffer       InBuffers[2], OutBuffers[1];
-    DWORD           dwSSPIOutFlags, cbData, cbIoBuffer;
+    SecBufferDesc OutBuffer, InBuffer;
+    SecBuffer OutBuffers[1], InBuffers[2];
+    DWORD dwSSPIOutFlags, cbData;
+    DWORD cbIoBuffer;
+    DWORD IoBufferSz;
+    PBYTE IoBuffer;
     SECURITY_STATUS scRet;
-    PUCHAR          IoBuffer;
-    BOOL            fDoRead;
+    BOOL fDoRead;
 
-    // Allocate data buffer.
-    IoBuffer = HeapAlloc(SecLayer->Heap, 0, IO_BUFFER_SIZE);
-    cbIoBuffer = 0;
+    // Take ownership of the CipherCache during handshake.
+    cbIoBuffer = SecLayer->CipherCache.cbBuffer;
+    IoBuffer = SecLayer->CipherCache.pvBuffer;
+    IoBufferSz = cbIoBuffer;
+
+    // This is FALSE for renegotiation requests.
     fDoRead = fDoInitialRead;
 
     // Loop until the handshake is finished or an error occurs.
     scRet = SEC_I_CONTINUE_NEEDED;
 
-    while( scRet == SEC_I_CONTINUE_NEEDED        ||
-           scRet == SEC_E_INCOMPLETE_MESSAGE     ||
-           scRet == SEC_I_INCOMPLETE_CREDENTIALS )
-   {
-        if(0 == cbIoBuffer || scRet == SEC_E_INCOMPLETE_MESSAGE) // Read data from server.
-        {
-            if(fDoRead)
-            {
-                cbData = recv(Socket, IoBuffer + cbIoBuffer, IO_BUFFER_SIZE - cbIoBuffer, 0 );
-                if(cbData == SOCKET_ERROR)
-                {
-                    printf("**** Error %d reading data from server\n", WSAGetLastError());
+    while (scRet == SEC_I_CONTINUE_NEEDED || scRet == SEC_E_INCOMPLETE_MESSAGE) {
+        // Read data from server.
+        if (SecLayer->CipherCache.cbBuffer == 0 || scRet == SEC_E_INCOMPLETE_MESSAGE) {
+            if (fDoRead) {
+                // Guesstimate how much more room we need.
+                IoBufferSz = IoBufferSz
+                    ? (IoBufferSz << 1)
+                    : INIT_IO_BUFSIZE;
+
+                // Make more space.
+                SecLayer->CipherCache.pvBuffer = HeapReAlloc(
+                    SecLayer->Heap,
+                    HEAP_ZERO_MEMORY,
+                    SecLayer->CipherCache.pvBuffer,
+                    IoBufferSz);
+
+                IoBuffer = SecLayer->CipherCache.pvBuffer;
+
+                // First make sure the sendbuffer is empty...
+                if (SafeSend(SecLayer, Socket, 0, 0) != 0) {
+                    // There's no way to recover from this, we'll desync
+                    // and never get connected, just return error
+                    // and let caller resume if possible.
+                    return SOCKET_ERROR;
+                }
+
+                cbData = recv(Socket, IoBuffer + cbIoBuffer, IoBufferSz - cbIoBuffer, 0);
+
+                if (cbData == SOCKET_ERROR) {
+                    TRACE("error %d reading data from server", WSAGetLastError());
+                    scRet = SEC_E_INTERNAL_ERROR;
+                    break;
+                } else if (cbData == 0) {
+                    TRACE("server unexpectedly disconnected");
                     scRet = SEC_E_INTERNAL_ERROR;
                     break;
                 }
-                else if(cbData == 0)
-                {
-                    printf("**** Server unexpectedly disconnected\n");
-                    scRet = SEC_E_INTERNAL_ERROR;
-                    break;
-                }
-                printf("%d bytes of handshake data received\n", cbData);
-                cbIoBuffer += cbData;
-            }
-            else
+                TRACE("%d bytes of handshake data received", cbData);
+                SecLayer->CipherCache.cbBuffer += cbData;
+                cbIoBuffer = SecLayer->CipherCache.cbBuffer;
+            } else {
               fDoRead = TRUE;
+            }
         }
-
-
 
         // Set up the input buffers. Buffer 0 is used to pass in data
         // received from the server. Schannel will consume some or all
@@ -208,22 +342,21 @@ static SECURITY_STATUS ClientHandshakeLoop(PSEC_LAYER      SecLayer,
         // If InitializeSecurityContext was successful (or if the error was
         // one of the special extended ones), send the contends of the output
         // buffer to the server.
-        if(scRet == SEC_E_OK                ||
-           scRet == SEC_I_CONTINUE_NEEDED   ||
-           FAILED(scRet) && (dwSSPIOutFlags & ISC_RET_EXTENDED_ERROR))
-        {
-            if(OutBuffers[0].cbBuffer != 0 && OutBuffers[0].pvBuffer != NULL)
-            {
-                // XXX NEED TO HANDLE EINTR
-                cbData = send(Socket, OutBuffers[0].pvBuffer, OutBuffers[0].cbBuffer, 0 );
-                if(cbData == SOCKET_ERROR || cbData == 0)
-                {
-                    printf( "**** Error %d sending data to server (2)\n",  WSAGetLastError() );
+        if (scRet == SEC_E_OK
+         || scRet == SEC_I_CONTINUE_NEEDED
+         || FAILED(scRet)
+         && (dwSSPIOutFlags & ISC_RET_EXTENDED_ERROR)) {
+            if (OutBuffers[0].cbBuffer != 0 && OutBuffers[0].pvBuffer != NULL) {
+                cbData = SafeSend(SecLayer, Socket, OutBuffers[0].pvBuffer, OutBuffers[0].cbBuffer);
+
+                if (cbData == SOCKET_ERROR || cbData == 0) {
+                    TRACE("error %d sending data to server", WSAGetLastError());
                     FreeContextBuffer(OutBuffers[0].pvBuffer);
                     DeleteSecurityContext(phContext);
                     return SEC_E_INTERNAL_ERROR;
                 }
-                printf("%d bytes of handshake data sent\n", cbData);
+
+                TRACE("%d bytes of handshake data sent", cbData);
 
                 // Free output buffer.
                 FreeContextBuffer(OutBuffers[0].pvBuffer);
@@ -231,79 +364,74 @@ static SECURITY_STATUS ClientHandshakeLoop(PSEC_LAYER      SecLayer,
             }
         }
 
-
-
         // If InitializeSecurityContext returned SEC_E_INCOMPLETE_MESSAGE,
         // then we need to read more data from the server and try again.
-        if(scRet == SEC_E_INCOMPLETE_MESSAGE) continue;
-
+        if (scRet == SEC_E_INCOMPLETE_MESSAGE) continue;
 
         // If InitializeSecurityContext returned SEC_E_OK, then the
         // handshake completed successfully.
-        if(scRet == SEC_E_OK)
-        {
+        if (scRet == SEC_E_OK) {
             // If the "extra" buffer contains data, this is encrypted application
             // protocol layer stuff. It needs to be saved. The application layer
             // will later decrypt it with DecryptMessage.
-            printf("Handshake was successful\n");
+            TRACE("handshake was successful");
 
-            if(InBuffers[1].BufferType == SECBUFFER_EXTRA)
-            {
-                pExtraData->pvBuffer = HeapAlloc(SecLayer->Heap, 0, InBuffers[1].cbBuffer);
-                MoveMemory( pExtraData->pvBuffer,
-                            IoBuffer + (cbIoBuffer - InBuffers[1].cbBuffer),
-                            InBuffers[1].cbBuffer );
+            if (InBuffers[1].BufferType == SECBUFFER_EXTRA) {
+                TRACE("%d extra bytes with handshake", InBuffers[1].cbBuffer);
 
-                pExtraData->cbBuffer   = InBuffers[1].cbBuffer;
-                pExtraData->BufferType = SECBUFFER_TOKEN;
+                MoveMemory(IoBuffer,
+                           IoBuffer + (cbIoBuffer - InBuffers[1].cbBuffer),
+                           InBuffers[1].cbBuffer);
 
-                printf( "%d bytes of app data was bundled with handshake data\n", pExtraData->cbBuffer );
-            }
-            else
-            {
-                pExtraData->pvBuffer   = NULL;
-                pExtraData->cbBuffer   = 0;
-                pExtraData->BufferType = SECBUFFER_EMPTY;
+                SecLayer->CipherCache.cbBuffer = InBuffers[1].cbBuffer;
+
+                TRACE("CipherCache @%lu", SecLayer->CipherCache.cbBuffer);
+            } else {
+                // All the data was used.
+                TRACE("handshake used all data in cache");
+                SecLayer->CipherCache.cbBuffer = 0;
             }
             break; // Bail out to quit
         }
 
-
-
         // Check for fatal error.
-        if(FAILED(scRet)) { printf("**** Error 0x%x returned by InitializeSecurityContext (2)\n", scRet); break; }
+        if (FAILED(scRet)) {
+            TRACE("error %#x returned by InitializeSecurityContext", scRet);
+            break;
+        }
 
         // If InitializeSecurityContext returned SEC_I_INCOMPLETE_CREDENTIALS,
         // then the server just requested client authentication.
-        if(scRet == SEC_I_INCOMPLETE_CREDENTIALS)
-        {
+        if (scRet == SEC_I_INCOMPLETE_CREDENTIALS) {
             break;
         }
 
         // Copy any leftover data from the "extra" buffer, and go around again.
-        if ( InBuffers[1].BufferType == SECBUFFER_EXTRA )
-        {
-            MoveMemory( IoBuffer, IoBuffer + (cbIoBuffer - InBuffers[1].cbBuffer), InBuffers[1].cbBuffer );
+        if (InBuffers[1].BufferType == SECBUFFER_EXTRA) {
+            MoveMemory(IoBuffer,
+                       IoBuffer + (cbIoBuffer - InBuffers[1].cbBuffer),
+                       InBuffers[1].cbBuffer);
             cbIoBuffer = InBuffers[1].cbBuffer;
-        }
-        else
+        } else {
           cbIoBuffer = 0;
+        }
+
+        // Keep cache data updated.
+        SecLayer->CipherCache.cbBuffer = cbIoBuffer;
     }
 
     // Delete the security context in the case of a fatal error.
-    if(FAILED(scRet)) DeleteSecurityContext(phContext);
+    if (FAILED(scRet))
+        DeleteSecurityContext(phContext);
 
-    HeapFree(SecLayer->Heap, 0, IoBuffer);
     return scRet;
 }
-
 
 static SECURITY_STATUS PerformClientHandshake(PSEC_LAYER      SecLayer,
                                               SOCKET          Socket,        // in
                                               LPSTR           pszServerName, // in
                                               PCredHandle     phCreds,
-                                              CtxtHandle *    phContext,     // out
-                                              SecBuffer *     pExtraData)   // out
+                                              CtxtHandle *    phContext)
 {
 
     SecBufferDesc   OutBuffer;
@@ -334,100 +462,107 @@ static SECURITY_STATUS PerformClientHandshake(PSEC_LAYER      SecLayer,
                                        NULL);
 
     if (scRet != SEC_I_CONTINUE_NEEDED) {
-        printf("**** Error %d returned by InitializeSecurityContext (1)\n", scRet);
+        TRACE("error %d returned by InitializeSecurityContext", scRet);
         return scRet;
     }
 
     // Send response to server if there is one.
-    if (OutBuffers[0].cbBuffer != 0 && OutBuffers[0].pvBuffer != NULL)
-    {
-        // XXX NEED TO HANDLE EINTR
-        cbData = send(Socket, OutBuffers[0].pvBuffer, OutBuffers[0].cbBuffer, 0);
+    if (OutBuffers[0].cbBuffer != 0 && OutBuffers[0].pvBuffer != NULL) {
+
+        cbData = SafeSend(SecLayer, Socket, OutBuffers[0].pvBuffer, OutBuffers[0].cbBuffer);
 
         if (cbData == SOCKET_ERROR || cbData == 0)
         {
-            printf("**** Error %d sending data to server (1)\n", WSAGetLastError());
+            TRACE("error %d sending data to server", WSAGetLastError());
             FreeContextBuffer(OutBuffers[0].pvBuffer);
             DeleteSecurityContext(phContext);
             return SEC_E_INTERNAL_ERROR;
         }
 
-        printf("%d bytes of handshake data sent\n", cbData);
-        FreeContextBuffer(OutBuffers[0].pvBuffer); // Free output buffer.
+        TRACE("%d bytes of handshake data sent", cbData);
+        FreeContextBuffer(OutBuffers[0].pvBuffer);
         OutBuffers[0].pvBuffer = NULL;
     }
 
-    return ClientHandshakeLoop(SecLayer, Socket, phCreds, phContext, TRUE, pExtraData);
+    return ClientHandshakeLoop(SecLayer, Socket, phCreds, phContext, TRUE);
 }
 
-
-
-static DWORD EncryptSend(SOCKET Socket,
-                         CtxtHandle * phContext,
+static DWORD EncryptSend(PSEC_LAYER SecLayer,
+                         SOCKET Socket,
                          PBYTE pbIoBuffer,
-                         SecPkgContext_StreamSizes Sizes,
                          DWORD cbMessage)
 {
-    SECURITY_STATUS scRet;
-    SecBufferDesc Message;
-    SecBuffer Buffers[4];
     DWORD cbData;
-    PBYTE pbMessage;
+    PBYTE pbMessage = pbIoBuffer + SecLayer->StreamSizes.cbHeader;
+    SecBuffer Buffers[] = {
+        {
+          .pvBuffer   = pbIoBuffer,
+          .cbBuffer   = SecLayer->StreamSizes.cbHeader,
+          .BufferType = SECBUFFER_STREAM_HEADER
+        }, {
+          .pvBuffer   = pbMessage,
+          .cbBuffer   = cbMessage,
+          .BufferType = SECBUFFER_DATA
+        }, {
+          .pvBuffer   = pbMessage + cbMessage,
+          .cbBuffer   = SecLayer->StreamSizes.cbTrailer,
+          .BufferType = SECBUFFER_STREAM_TRAILER
+        }, {
+          .BufferType = SECBUFFER_EMPTY,
+          .pvBuffer   = NULL,
+          .cbBuffer   = 0
+        },
+    };
+    SecBufferDesc Message = {
+        .ulVersion       = SECBUFFER_VERSION,
+        .cBuffers        = _countof(Buffers),
+        .pBuffers        = Buffers,
+    };
 
+    TRACE("sending %d bytes of plaintext.", cbMessage);
 
-    pbMessage = pbIoBuffer + Sizes.cbHeader; // Offset by "header size"
-
-    printf("Sending %d bytes of plaintext.\n", cbMessage);
-
-    Buffers[0].pvBuffer     = pbIoBuffer;              // Pointer to buffer 1
-    Buffers[0].cbBuffer     = Sizes.cbHeader;          // length of header
-    Buffers[0].BufferType   = SECBUFFER_STREAM_HEADER; // Type of the buffer
-
-    Buffers[1].pvBuffer     = pbMessage;               // Pointer to buffer 2
-    Buffers[1].cbBuffer     = cbMessage;               // length of the message
-    Buffers[1].BufferType   = SECBUFFER_DATA;          // Type of the buffer
-
-    Buffers[2].pvBuffer     = pbMessage + cbMessage;   // Pointer to buffer 3
-    Buffers[2].cbBuffer     = Sizes.cbTrailer;         // length of the trailor
-    Buffers[2].BufferType   = SECBUFFER_STREAM_TRAILER;// Type of the buffer
-
-        Buffers[3].pvBuffer     = SECBUFFER_EMPTY;     // Pointer to buffer 4
-    Buffers[3].cbBuffer     = SECBUFFER_EMPTY;         // length of buffer 4
-    Buffers[3].BufferType   = SECBUFFER_EMPTY;         // Type of the buffer 4
-
-
-    Message.ulVersion       = SECBUFFER_VERSION;        // Version number
-    Message.cBuffers        = 4;                        // Number of buffers - must contain four SecBuffer structures.
-    Message.pBuffers        = Buffers;                  // Pointer to array of buffers
-
-    scRet = EncryptMessage(phContext, 0, &Message, 0);  // must contain four SecBuffer structures.
-
-    if (FAILED(scRet)) {
-        printf("**** Error 0x%x returned by EncryptMessage\n", scRet);
-        return scRet;
+    // Before we commit to sending this, check if it will succeed.
+    if (SafeSend(SecLayer, Socket, NULL, 0) != 0) {
+        TRACE("not commiting to send(), interrupted message in cache");
+        return SOCKET_ERROR;
     }
 
-    // Send the encrypted data to the server.
-    // XXX NEED TO HANDLE EINTR
-    cbData = send(Socket,
-                  pbIoBuffer,
-                  Buffers[0].cbBuffer + Buffers[1].cbBuffer + Buffers[2].cbBuffer,
-                  0);
+    SecLayer->LastError = EncryptMessage(&SecLayer->Context, 0, &Message, 0);
 
-    printf("%d bytes of encrypted data sent\n", cbData);
-
-    // Subtract header and trailer size.
-    if (cbData != Buffers[0].cbBuffer + Buffers[1].cbBuffer + Buffers[2].cbBuffer) {
-        printf("FIXME: send truncated, this probably wont work");
+    if (SecLayer->LastError != SEC_E_OK) {
+        TRACE("error %#x returned by EncryptMessage", SecLayer->LastError);
+        return SecLayer->LastError;
     }
 
+    // It would be nice if we could just send() here, but we need to handle
+    // WSACancelBlockingCall. We cannot simply abandon the message because it
+    // will look like a message suppression attack.
+
+    // Regardless, once we've encryped, it *must* be sent or the socket will
+    // break.
+    cbData = SafeSend(SecLayer,
+                      Socket,
+                      pbIoBuffer,
+                      Buffers[0].cbBuffer
+                    + Buffers[1].cbBuffer
+                    + Buffers[2].cbBuffer);
+
+    TRACE("%d bytes of encrypted data sent", cbData);
+
+    // We can pass this error through to caller.
+    if (cbData == SOCKET_ERROR || cbData == 0)
+        return cbData;
+
+    // We don't want to return the actual number through if it worked, because
+    // we added some protocol data to it.
+    //
+    // Note that SafeSend() always accepts all the data we give it.
     return cbMessage;
-
 }
 
 static LONG FillRequestFromCache(PSEC_LAYER SecLayer, PBYTE Buf, DWORD Size)
 {
-    printf("Plaintext cache @%lu bytes.\n", SecLayer->PlainCache.cbBuffer);
+    TRACE("plaintext cache @%lu bytes.", SecLayer->PlainCache.cbBuffer);
 
     if (SecLayer->PlainCache.cbBuffer) {
         SIZE_T FilledFromCache = min(Size, SecLayer->PlainCache.cbBuffer);
@@ -471,9 +606,14 @@ LONG SecureRecv(PSEC_LAYER SecLayer, SOCKET Socket, PBYTE Buf, DWORD Size)
         .pBuffers         = Buffers,
     };
 
-    printf("SecureRecv() => %#x bytes from %#x into %p\n", Size, Socket, Buf);
+    TRACE("SecureRecv() => %#x bytes from %#x into %p", Size, Socket, Buf);
 
     if (!SecLayer || Socket == INVALID_SOCKET) {
+        return SOCKET_ERROR;
+    }
+
+    // First make sure the sendbuffer is empty or we'll get desynched.
+    if (SafeSend(SecLayer, Socket, 0, 0) != 0) {
         return SOCKET_ERROR;
     }
 
@@ -492,8 +632,7 @@ LONG SecureRecv(PSEC_LAYER SecLayer, SOCKET Socket, PBYTE Buf, DWORD Size)
             // The only way we can reach here is if Gravity called
             // WSACancelBlocking() in another thread, so resume a
             // previous operation.
-            printf("Resuming an interrupted operation with %d bytes\n",
-                   RecvOffset);
+            TRACE("resume interrupted operation with %d bytes", RecvOffset);
             goto resume;
         }
 
@@ -507,7 +646,7 @@ LONG SecureRecv(PSEC_LAYER SecLayer, SOCKET Socket, PBYTE Buf, DWORD Size)
         for (Refills = 0;; Refills++) {
             LONG AmountRead;
 
-            printf("Attempt %d to refill ciphertext cache\n", Refills);
+            TRACE("attempt %d to refill ciphertext cache", Refills);
 
             // Allocate the space we think we might need, we can ask schannel
             // how short we are. RecvOffset is how much actually contains
@@ -523,14 +662,17 @@ LONG SecureRecv(PSEC_LAYER SecLayer, SOCKET Socket, PBYTE Buf, DWORD Size)
                               SecLayer->CipherCache.cbBuffer - RecvOffset,
                               0);
 
-            printf("%d bytes of application data received\n", AmountRead);
+            TRACE("%d bytes of application data received", AmountRead);
 
             // Even if there was en error, attempt a decrypt operation.
             // The reason is that we may have been blocking and Gravity woke us
             // up from a different thread with WSACancelBlocking(), and I may
             // have overestimated the read size.
             if (AmountRead <= 0) {
-                printf("Error %d from recv()\n", WSAGetLastError());
+                TRACE("error %d from recv()", WSAGetLastError());
+
+                // Fixup cache size to record what we still have.
+                SecLayer->CipherCache.cbBuffer = RecvOffset;
                 return AmountRead;
             }
 
@@ -545,7 +687,7 @@ LONG SecureRecv(PSEC_LAYER SecLayer, SOCKET Socket, PBYTE Buf, DWORD Size)
 
             scRet = DecryptMessage(&SecLayer->Context, &Message, 0, NULL);
 
-            printf("DecryptMessage() returned %#x\n", scRet);
+            TRACE("DecryptMessage() => %#x", scRet);
 
             // These should never be modified.
             assert(Message.cBuffers == _countof(Buffers));
@@ -565,7 +707,7 @@ LONG SecureRecv(PSEC_LAYER SecLayer, SOCKET Socket, PBYTE Buf, DWORD Size)
                     }
                 }
 
-                printf("There are %u bytes still in ciphertext\n", ExtraBytes);
+                TRACE("there are %u bytes still in ciphertext", ExtraBytes);
 
                 assert(SecLayer->PlainCache.cbBuffer == 0);
 
@@ -610,7 +752,7 @@ LONG SecureRecv(PSEC_LAYER SecLayer, SOCKET Socket, PBYTE Buf, DWORD Size)
 
                 SecLayer->CipherCache.cbBuffer = ExtraBytes;
 
-                printf("CipherCache now contains %d\n", ExtraBytes);
+                TRACE("CipherCache now contains %d", ExtraBytes);
 
                 // Now break to let the plaintext cache handle the request.
                 break;
@@ -622,7 +764,7 @@ LONG SecureRecv(PSEC_LAYER SecLayer, SOCKET Socket, PBYTE Buf, DWORD Size)
             if (scRet == SEC_E_INCOMPLETE_MESSAGE) {
                 DWORD MissingBytes = 0;
 
-                printf("We need more ciphertext to make progress\n");
+                TRACE("We need more ciphertext to make progress");
 
                 for (unsigned long i = 0; i < Message.cBuffers; i++) {
                     // The amount needed is Message.pBuffers[i].cbBuffer
@@ -635,7 +777,7 @@ LONG SecureRecv(PSEC_LAYER SecLayer, SOCKET Socket, PBYTE Buf, DWORD Size)
 
                 SecLayer->CipherCache.cbBuffer += MissingBytes;
 
-                printf("System says we need %d more bytes\n", MissingBytes);
+                TRACE("system says we need %d more bytes", MissingBytes);
 
                 // Try another recv now that we know the size required.
                 continue;
@@ -644,113 +786,82 @@ LONG SecureRecv(PSEC_LAYER SecLayer, SOCKET Socket, PBYTE Buf, DWORD Size)
             // XXX: If this happens, there's some memory management error.
             // this is a bug in my code.
             if (scRet == SEC_E_INVALID_TOKEN) {
-                printf("This usually means the buffers are not correct.\n");
-                __debugbreak();
-                return SOCKET_ERROR;
+                TRACE("oof, buffers are not correct");
+                AfxDebugBreak();
             }
 
-            // Either there was a network error, an attack, or a bug
-            // in my code managing ciphertext.
+            // Either there was a network error, or a bug in my code managing
+            // ciphertext.
             if (scRet == SEC_E_DECRYPT_FAILURE) {
-                printf("System reports that message decryption failed\n");
-                __debugbreak();
-                // FIXME: Maybe invalidate the cache?
-                return SOCKET_ERROR;
+                TRACE("system reports that message decryption failed");
+                AfxDebugBreak();
             }
 
-            // FIXME: I've never seen this happen, but apparently it can.
+            // FIXME: I've never seen this happen...
             if (scRet == SEC_I_CONTEXT_EXPIRED) {
-                printf("SEC_I_CONTEXT_EXPIRED, what should I do here.\n");
-                // Is there a SECBUFFER_EXTRA to tell me where to clear to?
-                __debugbreak();
-                return 0;
+                TRACE("SEC_I_CONTEXT_EXPIRED what should I do here?");
+                AfxDebugBreak();
             }
 
             // Server wants to renegotiate, we may need to shuffle
             // SECBUFFER_EXTRA buffers around.
             // FIXME: This probably doesnt handle WSAEINTR yet.
             if (scRet == SEC_I_RENEGOTIATE) {
-                printf("Server requested renegotiate!\n");
+                TRACE("server requested renegotiate");
+                scRet = ClientHandshakeLoop(SecLayer,
+                                            Socket,
+                                            &SecLayer->Credentials,
+                                            &SecLayer->Context,
+                                            FALSE);
 
-                // untested, need to fix.
-                __debugbreak();
+                TRACE("ClientHandshakeLoop => %#x", scRet);
 
-                for (unsigned long i = 0; i < Message.cBuffers; i++) {
-                    if (Message.pBuffers[i].BufferType == SECBUFFER_EXTRA) {
-                        scRet = ClientHandshakeLoop(SecLayer,
-                                                    Socket,
-                                                    &SecLayer->Credentials,
-                                                    &SecLayer->Context,
-                                                    FALSE,
-                                                    &Message.pBuffers[i]);
-                        if (scRet != SEC_E_OK) {
-                            return SOCKET_ERROR;
-                        }
-
-                        // Do I really need to do this?
-                        // if yes, need to copy whatever is left into cache.a
-                        // FIXME: yes, i think i do.
-                        assert(Message.pBuffers[i].pvBuffer == NULL);
-
-                        //if (ExtraBuffer.pvBuffer)
-                        //{
-                        //    MoveMemory(pbIoBuffer, ExtraBuffer.pvBuffer, ExtraBuffer.cbBuffer);
-                        //    cbIoBuffer = ExtraBuffer.cbBuffer;
-                        //}
-
-                        break;
-                    }
-
+                if (scRet == SEC_E_OK) {
+                    // Try another recv now that worked.
+                    continue;
                 }
 
-                // Try another recv now that worked.
-                continue;
             }
 
             // FIXME: handle all the documented return codes.
-            printf("unhandled scRet %#x\n", scRet);
-            __debugbreak();
+            TRACE("unhandled scRet %#x", scRet);
+            AfxDebugBreak();
+
+            // Maybe invalidate the cipher cache and try again?
+            SecLayer->CipherCache.cbBuffer = 0;
             return SOCKET_ERROR;
         }
     }
 
     // Unreachable.
-    __debugbreak();
+    AfxDebugBreak();
     return SOCKET_ERROR;
 }
 
 LONG SecureSend(PSEC_LAYER SecurityLayer, SOCKET Socket, PVOID Buf, SIZE_T Size)
 {
-    SecPkgContext_StreamSizes Sizes;
     SECURITY_STATUS Status;
     PBYTE pbIoBuffer;
     DWORD cbIoBufferLength, cbData;
 
-    printf("SecureSend(%p, %lu, %p, %lu);\n", SecurityLayer, Socket, Buf, Size);
+    TRACE("%lu %p %lu", Socket, Buf, Size);
 
-    if (!SecurityLayer) {
+    if (!SecurityLayer || Socket == INVALID_SOCKET) {
         return SOCKET_ERROR;
     }
 
-    Status = QueryContextAttributes(&SecurityLayer->Context,
-                                             SECPKG_ATTR_STREAM_SIZES,
-                                             &Sizes);
-
-    if (Status != SEC_E_OK) {
-        printf("**** Error 0x%x reading SECPKG_ATTR_STREAM_SIZES\n", Status);
-        return -1;
-    }
-
-    if (Size > Sizes.cbMaximumMessage)
-        Size = Sizes.cbMaximumMessage;
+    if (Size > SecurityLayer->StreamSizes.cbMaximumMessage)
+        Size = SecurityLayer->StreamSizes.cbMaximumMessage;
 
     // Create a buffer.
-    cbIoBufferLength = Sizes.cbHeader + Size + Sizes.cbTrailer;
+    cbIoBufferLength = SecurityLayer->StreamSizes.cbHeader
+                        + SecurityLayer->StreamSizes.cbTrailer
+                        + Size;
     pbIoBuffer       = HeapAlloc(SecurityLayer->Heap, 0, cbIoBufferLength);
 
-    memcpy(pbIoBuffer+Sizes.cbHeader, Buf, Size);
+    memcpy(pbIoBuffer+SecurityLayer->StreamSizes.cbHeader, Buf, Size);
 
-    cbData = EncryptSend(Socket, &SecurityLayer->Context, pbIoBuffer, Sizes, Size);
+    cbData = EncryptSend(SecurityLayer, Socket, pbIoBuffer, Size);
 
     HeapFree(SecurityLayer->Heap, 0, pbIoBuffer);
 
@@ -758,7 +869,6 @@ LONG SecureSend(PSEC_LAYER SecurityLayer, SOCKET Socket, PVOID Buf, SIZE_T Size)
 }
 
 PSEC_LAYER AddSecurityLayer(LPCTSTR HostAddress, SOCKET Socket) {
-    SecBuffer  ExtraData;
     SECURITY_STATUS Status;
     PSEC_LAYER SecurityLayer;
     TimeStamp Lifetime;
@@ -766,18 +876,21 @@ PSEC_LAYER AddSecurityLayer(LPCTSTR HostAddress, SOCKET Socket) {
         .dwVersion = SCHANNEL_CRED_VERSION,
     };
 
-    SecurityLayer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof *SecurityLayer);
+    SecurityLayer = HeapAlloc(GetProcessHeap(),
+                              HEAP_ZERO_MEMORY,
+                              sizeof *SecurityLayer);
 
     if (!SecurityLayer) {
-        printf("Memory allocation failure\n");
+        TRACE("memory allocation failure");
         return NULL;
     }
 
     // Create a heap to make cleanup easier.
     SecurityLayer->Heap = HeapCreate(HEAP_GENERATE_EXCEPTIONS, 0, 0);
 
-    SecurityLayer->PlainCache.BufferType  = SECBUFFER_DATA;
+    SecurityLayer->PlainCache.BufferType = SECBUFFER_DATA;
     SecurityLayer->CipherCache.BufferType = SECBUFFER_DATA;
+    SecurityLayer->SendCache.BufferType = SECBUFFER_DATA;
 
     // Create the buffers used for decrypting messages.
     SecurityLayer->PlainCache.pvBuffer = HeapAlloc(SecurityLayer->Heap,
@@ -786,6 +899,9 @@ PSEC_LAYER AddSecurityLayer(LPCTSTR HostAddress, SOCKET Socket) {
     SecurityLayer->CipherCache.pvBuffer = HeapAlloc(SecurityLayer->Heap,
                                                     HEAP_ZERO_MEMORY,
                                                     0);
+    SecurityLayer->SendCache.pvBuffer = HeapAlloc(SecurityLayer->Heap,
+                                                  HEAP_ZERO_MEMORY,
+                                                  0);
 
     // https://docs.microsoft.com/en-us/windows/win32/secauthn/getting-schannel-credentials
     Status = AcquireCredentialsHandle(NULL,
@@ -799,7 +915,7 @@ PSEC_LAYER AddSecurityLayer(LPCTSTR HostAddress, SOCKET Socket) {
                                       &Lifetime);
 
     if (Status != SEC_E_OK) {
-        printf("AcquireCredentialsHandle() failed, %#x\n", Status);
+        TRACE("AcquireCredentialsHandle => %#x", Status);
         goto error;
     }
 
@@ -807,9 +923,9 @@ PSEC_LAYER AddSecurityLayer(LPCTSTR HostAddress, SOCKET Socket) {
                                Socket,
                                HostAddress,
                                &SecurityLayer->Credentials,
-                               &SecurityLayer->Context,
-                               &ExtraData) != 0) {
-        printf("Perform handshake failed\n");
+                               &SecurityLayer->Context) != 0) {
+        // Note: if it was WSAEINTR, you can retry!
+        TRACE("perform handshake failed");
         goto error;
     }
 
@@ -818,7 +934,7 @@ PSEC_LAYER AddSecurityLayer(LPCTSTR HostAddress, SOCKET Socket) {
                                     &SecurityLayer->StreamSizes);
 
     if (Status != SEC_E_OK) {
-        printf("Failed to query sizes\n");
+        TRACE("Failed to query sizes");
         goto error;
     }
 
@@ -826,6 +942,7 @@ PSEC_LAYER AddSecurityLayer(LPCTSTR HostAddress, SOCKET Socket) {
 
   error:
     DeleteSecurityContext(&SecurityLayer->Context);
+    FreeCredentialsHandle(&SecurityLayer->Credentials);
     HeapDestroy(SecurityLayer->Heap);
     HeapFree(GetProcessHeap(), 0, SecurityLayer);
     return NULL;
@@ -837,8 +954,9 @@ void RemoveSecureLayer(PSEC_LAYER SecurityLayer, SOCKET Socket)
         return;
 
     // Send a close_notify alert to the server
-    DisconnectFromServer(Socket, &SecurityLayer->Credentials, &SecurityLayer->Context);
+    DisconnectFromServer(SecurityLayer, Socket);
     DeleteSecurityContext(&SecurityLayer->Context);
+    FreeCredentialsHandle(&SecurityLayer->Credentials);
     HeapDestroy(SecurityLayer->Heap);
     HeapFree(GetProcessHeap(), 0, SecurityLayer);
     return;

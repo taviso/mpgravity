@@ -39,12 +39,11 @@ Visual Studio.
 
 # Changes
 
->  The latest version is 3.0.5
+>  The latest version is 3.0.6
 
 
 ```
-
-3.0.6 UNRELEASED
+3.0.6 Release 19/04/2020
   [+] Added : Experimental support for NNTPS, you can select
       "Connect Securely" in the server dialog.
   [+] Changed : Disable the splashscreen by default.
@@ -79,4 +78,5 @@ I'll also consider implementing feature requests.
 
 # Security
 
-I will fix any security bugs you report, you can either create an issue or email me at <taviso@gmail.com>.
+I will fix any security bugs you report, you can either create an issue or
+email me at <taviso@gmail.com>.

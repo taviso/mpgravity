@@ -3603,7 +3603,6 @@ bool CMainFrame::CheckForProgramUpdate(bool &bFailed, bool bCheckBetaAgainstStab
 			// Read the first line (is all we need)
 			if (pFile->ReadString(strLine))
 			{
-			    ::MessageBox(NULL, strLine, "read", 0);
 				// Check for a 404 error
 				if (strLine.Find(_T("404")) == -1)
 				{
